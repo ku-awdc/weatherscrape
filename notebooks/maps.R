@@ -48,3 +48,11 @@ for(f in which(failed)){
   cat("\n")
   res[[f]] <- nr[[1]]
 }
+
+
+if(FALSE){
+  fn <- file.path(Sys.getenv("WEATHER_FOLDER"), "historical", "2023_W02.rqs")
+  dat <- qread(fn)
+  sapply(dat, function(x) length(x$list)) |> table()
+}
+
