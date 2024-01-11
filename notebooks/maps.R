@@ -21,7 +21,7 @@ is_anholt <- which(locs$Location=="S_8165")
 locs$Latitude[is_anholt] <- 56.65
 locs$Longitude[is_anholt] <- 11.50
 
-start_date <- "2023-01-09"
+start_date <- "2023-01-23"
 res <- scrape_historical(locs, start_date=start_date, n_days=7L, time_out=0.1)
 fn <- file.path(Sys.getenv("WEATHER_FOLDER"), "historical", str_c(strftime(as.Date(start_date), "%Y_W%V"), ".rqs"))
 qsave(res, fn)
