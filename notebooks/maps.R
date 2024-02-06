@@ -21,10 +21,23 @@ is_anholt <- which(locs$Location=="S_8165")
 locs$Latitude[is_anholt] <- 56.65
 locs$Longitude[is_anholt] <- 11.50
 
-start_date <- "2023-02-06"
+weekno <- 8
+
+tibble(Date = seq.Date(as.Date("2023-01-01"),as.Date("2023-12-31"),by=1L)) |>
+  mutate(Week = strftime(Date, "%V") |> as.numeric()) |>
+  filter(Week==weekno) |>
+  arrange(Date) |>
+  slice(1L) |>
+  pull(Date) ->
+  start_date
+
 stopifnot(strftime(as.Date(start_date), "%w") == "1")
-res <- scrape_historical(locs, start_date=start_date, n_days=7L, time_out=0.1)
 fn <- file.path(Sys.getenv("WEATHER_FOLDER"), "historical", str_c(strftime(as.Date(start_date), "%Y_W%V"), ".rqs"))
+stopifnot(!file.exists(fn))
+fn
+start_date
+
+res <- scrape_historical(locs, start_date=start_date, n_days=7L, time_out=0.1)
 qsave(res, fn)
 
 
