@@ -21,7 +21,7 @@ is_anholt <- which(locs$Location=="S_8165")
 locs$Latitude[is_anholt] <- 56.65
 locs$Longitude[is_anholt] <- 11.50
 
-weekno <- 13
+weekno <- 17
 
 tibble(Date = seq.Date(as.Date("2023-01-01"),as.Date("2023-12-31"),by=1L)) |>
   mutate(Week = strftime(Date, "%V") |> as.numeric()) |>
