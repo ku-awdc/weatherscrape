@@ -16,7 +16,8 @@ Depends:
 Imports:
   rlang,
   dplyr,
-  tibble
+  tibble,
+  openmeteo
 Suggests: 
   neatpkg,
   knitr,
