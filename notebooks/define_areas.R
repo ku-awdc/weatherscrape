@@ -134,8 +134,14 @@ expand_grid(
   bind_rows() |>
   filter(st_intersects(geometry, st_union(countries), sparse=FALSE)[,1]) |>
   mutate(geometry = st_intersection(geometry, st_union(bind_rows(countries, rus)))) |>
-  st_as_sf() ->
-  boxes
+  st_as_sf() |>
+  mutate(GridID = str_c("E",xmin,"N",ymin)) |>
+  mutate(GridScale = "100x100km", Centroid = st_centroid(geometry, of_largest_polygon = TRUE), Area = st_area(geometry)) |>
+  select(GridID, GridScale, Centroid, Area, geometry) ->
+  grids
+
+russia <- st_intersection(rus, st_as_sfc(st_bbox(countries)))
+save(grids, countries, russia, file="notebooks/grids.rda")
 
 ggplot() +
   geom_sf(data=bind_rows(countries,rus), aes(fill=Label), alpha=0.15) +
@@ -143,4 +149,5 @@ ggplot() +
   geom_sf(data=boxes |> mutate(pt = st_centroid(geometry, of_largest_polygon = TRUE)), aes(geometry=pt), size=0.5) +
   theme_void() +
   theme(legend.position = "none")
-ggsave("weather_grid.pdf", width=12, height=10)
+ggsave("notebooks/weather_grid.pdf", width=12, height=10)
+
