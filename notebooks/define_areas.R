@@ -1,5 +1,7 @@
+library("tidyverse")
 library("hexscape")
 library("sf")
+library("units")
 
 all_nuts_codes(level=0L) |>
   pull(NUTS) |>
@@ -54,6 +56,7 @@ all_nuts_codes(level=1) |>
 
 
 library("rnaturalearth")
+library("rnaturalearthhires")  # To install, just run the code below
 
 mct <- c("Andorra", "Belarus", "Bosnia and Herzegovina", "Moldova", "Monaco", "Ukraine", "Vatican City", "Kosovo", "San Marino")
 
@@ -111,8 +114,39 @@ bind_rows(countries, rus) |>
   ggplot() +
   geom_sf(aes(fill=NUTS)) +
   coord_sf(datum = "EPSG:3035")
-  #  coord_sf(ylim=bb[c(2,4)], xlim=bb[c(1,3)]) +
-  theme_void()
+
+
+# Extract Kaliningrad and Crimea from Russia:
+klgbx <- st_point(c(5050000,3550000)) |> st_buffer(200000) |> st_sfc(crs=st_crs(rus))
+crmbx <- st_union(
+  st_point(c(6350000,2840000)) |> st_buffer(12000) |> st_sfc(crs=st_crs(rus)),
+  st_point(c(6200000,2800000)) |> st_buffer(162000) |> st_sfc(crs=st_crs(rus))
+)
+ggplot() +
+  geom_sf(data=rus) +
+  geom_sf(data=klgbx, col="blue", fill="transparent") +
+  geom_sf(data=crmbx, col="red", fill="transparent") +
+  coord_sf(datum = "EPSG:3035") +
+  #coord_sf(xlim=c(6000000,6500000), ylim=c(2500000,3000000), datum = "EPSG:3035") +
+  #coord_sf(xlim=c(6300000,6400000), ylim=c(2800000,2900000), datum = "EPSG:3035") +
+  theme_light()
+
+crimea <- st_intersection(rus, crmbx)
+kaliningrad <- st_intersection(rus, klgbx)
+
+ggplot() +
+  geom_sf(data=rus) +
+  geom_sf(data=kaliningrad, fill="blue") +
+  geom_sf(data=crimea, fill="red") +
+  coord_sf(datum = "EPSG:3035") +
+  #coord_sf(xlim=c(6000000,6500000), ylim=c(2500000,3000000), datum = "EPSG:3035") +
+  #coord_sf(xlim=c(6300000,6400000), ylim=c(2800000,2900000), datum = "EPSG:3035") +
+  theme_light()
+
+countries <- bind_rows(countries,
+                       crimea |> mutate(NUTS = "CRI", Label = "Crimea"),
+                       kaliningrad |> mutate(NUTS = "RUS", Label = "Kaliningrad")
+                       )
 
 bb <- st_bbox(countries)
 xs <- seq(floor(bb[1]/1e5), ceiling(bb[3]/1e5), by=1)
@@ -133,21 +167,58 @@ expand_grid(
   }, .progress=TRUE) |>
   bind_rows() |>
   filter(st_intersects(geometry, st_union(countries), sparse=FALSE)[,1]) |>
-  mutate(geometry = st_intersection(geometry, st_union(bind_rows(countries, rus)))) |>
+  mutate(geometry = st_intersection(geometry, st_union(countries))) |>
   st_as_sf() |>
   mutate(GridID = str_c("E",xmin,"N",ymin)) |>
   mutate(GridScale = "100x100km", Centroid = st_centroid(geometry, of_largest_polygon = TRUE), Area = st_area(geometry)) |>
   select(GridID, GridScale, Centroid, Area, geometry) ->
-  grids
+  grids_100
 
-russia <- st_intersection(rus, st_as_sfc(st_bbox(countries)))
-save(grids, countries, russia, file="notebooks/grids.rda")
+bb <- st_bbox(countries |> filter(NUTS=="DK"))
+xs <- seq(floor(bb[1]/1e4), ceiling(bb[3]/1e4), by=1)
+ys <- seq(floor(bb[2]/1e4), ceiling(bb[4]/1e4), by=1)
+
+expand_grid(
+  xmax = xs[-1L],
+  ymax = ys[-1L]
+) |>
+  mutate(xmin = xmax-1, ymin = ymax-1) |>
+  rowwise() |>
+  group_split() |>
+  map(\(x){
+    tb <- bb
+    tb[] <- as.numeric(x[names(bb)]) * 10^4
+    x |>
+      mutate(geometry = st_as_sfc(tb))
+  }, .progress=TRUE) |>
+  bind_rows() |>
+  filter(st_intersects(geometry, st_union(countries |> filter(NUTS=="DK")), sparse=FALSE)[,1]) |>
+  mutate(geometry = st_intersection(geometry, st_union(countries |> filter(NUTS=="DK")))) |>
+  st_as_sf() |>
+  mutate(GridID = str_c("E",xmin,"N",ymin)) |>
+  mutate(GridScale = "10x10km", Centroid = st_centroid(geometry, of_largest_polygon = TRUE), Area = st_area(geometry)) |>
+  select(GridID, GridScale, Centroid, Area, geometry) ->
+  grids_10
+
+grids <- bind_rows(grids_10, grids_100)
+#save(grids, countries, file="notebooks/grids.rda")
+
+
+(load("notebooks/grids.rda"))
 
 ggplot() +
-  geom_sf(data=bind_rows(countries,rus), aes(fill=Label), alpha=0.15) +
-  geom_sf(data=boxes, fill="transparent") +
-  geom_sf(data=boxes |> mutate(pt = st_centroid(geometry, of_largest_polygon = TRUE)), aes(geometry=pt), size=0.5) +
+  geom_sf(data=countries, aes(fill=Label), alpha=0.15) +
+  geom_sf(data=grids |> filter(GridScale=="100x100km"), fill="transparent") +
+  geom_sf(data=grids |> filter(GridScale=="100x100km"), aes(geometry=Centroid), size=0.5) +
   theme_void() +
   theme(legend.position = "none")
-ggsave("notebooks/weather_grid.pdf", width=12, height=10)
+ggsave("notebooks/country_grids.pdf", width=12, height=10)
+
+ggplot() +
+  geom_sf(data=countries |> filter(NUTS=="DK"), aes(fill=Label), alpha=0.15) +
+  geom_sf(data=grids |> filter(GridScale=="10x10km"), fill="transparent") +
+  geom_sf(data=grids |> filter(GridScale=="10x10km"), aes(geometry=Centroid), size=0.5) +
+  theme_void() +
+  theme(legend.position = "none")
+ggsave("notebooks/denmark_grids.pdf", width=12, height=10)
 
