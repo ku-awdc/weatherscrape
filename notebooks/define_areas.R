@@ -144,8 +144,8 @@ ggplot() +
   theme_light()
 
 countries <- bind_rows(countries,
-                       crimea |> mutate(NUTS = "CRI", Label = "Crimea"),
-                       kaliningrad |> mutate(NUTS = "RUS", Label = "Kaliningrad")
+                       crimea |> mutate(NUTS = "CRI", Label = "Crimea (ne)"),
+                       kaliningrad |> mutate(NUTS = "RUS", Label = "Kaliningrad (ne)")
                        )
 
 bb <- st_bbox(countries)
@@ -207,7 +207,7 @@ grids <- bind_rows(grids_10, grids_100)
 (load("notebooks/grids.rda"))
 
 ggplot() +
-  geom_sf(data=countries, aes(fill=Label), alpha=0.15) +
+  geom_sf(data=countries, aes(fill=NUTS), alpha=0.15) +
   geom_sf(data=grids |> filter(GridScale=="100x100km"), fill="transparent") +
   geom_sf(data=grids |> filter(GridScale=="100x100km"), aes(geometry=Centroid), size=0.5) +
   theme_void() +
@@ -222,3 +222,9 @@ ggplot() +
   theme(legend.position = "none")
 ggsave("notebooks/denmark_grids.pdf", width=12, height=10)
 
+
+ggplot() +
+  geom_sf(data=countries, aes(fill=NUTS), alpha=0.15) +
+  theme_void() +
+  theme(legend.title=element_blank())
+ggsave("notebooks/countries.pdf", width=12, height=10)
