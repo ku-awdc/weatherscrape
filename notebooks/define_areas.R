@@ -228,3 +228,12 @@ ggplot() +
   theme_void() +
   theme(legend.title=element_blank())
 ggsave("notebooks/countries.pdf", width=12, height=10)
+
+
+ggplot() +
+#  geom_sf(data=countries |> filter(NUTS=="DK"), aes(fill=Label), alpha=0.15) +
+  geom_sf(data=grids |> filter(st_intersects(geometry, countries |> filter(NUTS=="DK"), sparse=FALSE)[,1], GridScale=="100x100km") |> st_intersection(countries |> filter(NUTS=="DK")), mapping=aes(fill=GridID)) +
+  geom_sf(data=grids |> filter(GridScale=="10x10km"), fill="transparent", col="black") +
+  theme_void() +
+  theme(legend.position = "bottom")
+ggsave("notebooks/grids_dk.pdf", width=12, height=10)
