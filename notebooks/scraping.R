@@ -73,6 +73,7 @@ ggplot() + geom_sf(data=grid) + geom_sf(data=pts, mapping=aes(col=Elevation))
 # So we can start a script that at e.g. midday scrapes 1 year of data for 50 locations
 # Or, even easier, scrape 1 location per 30 mins (48 per day)
 
+if(FALSE){
 # Ordering of locations by country, with priority for DK/SE/NO/DE/UK/NL/BE/PL
 countries |>
   filter(NUTS %in% c("DK","SE","NO","DE","UK","NL","BE","PL")) |>
@@ -85,6 +86,12 @@ grids |>
   filter(GridScale=="100x100km") |>
   arrange(desc(Priority), DistDK) ->
   to_scrape
+}
+
+grids |>
+  filter(GridScale=="10x10km") ->
+  to_scrape
+
 
 # 4.5 calls per month and location (regardless of number of months or locations) - so round to 5
 hourly <- c("temperature_2m", "relative_humidity_2m", "dew_point_2m", "apparent_temperature",
