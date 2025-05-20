@@ -41,8 +41,8 @@ daily <- c("sunrise", "sunset", "wind_direction_10m_dominant", "weather_code")
 daily <- c(daily, c("temperature_2m_max","temperature_2m_min","temperature_2m_mean","precipitation_sum","wind_speed_10m_max","wind_gusts_10m_max"))
 
 
-ll <- locations[2,2:3] |> as.numeric()
-hh <- weather_history(ll, "2017-01-01", "2024-12-31", hourly=hourly, daily=daily,
+ll <- locations[1,2:3] |> as.numeric()
+hh <- weather_history(ll, "2015-01-01", "2025-04-30", hourly=hourly, daily=daily,
                 response_units=list(temperature_unit = "celsius", windspeed_unit = "kmh", precipitation_unit = "mm"),
                 timezone="UTC")
 
@@ -66,7 +66,7 @@ hh |>
   rename_with(function(x) str_replace(x, "daily_", "")) ->
   daily_data
 
-save(hourly_data, daily_data, file="site_b.rda")
+save(hourly_data, daily_data, file="site_a.rda")
 
 
 ## Then separate starts_with("daily") from starts_with("hourly") and discard is.na(time) or !is.na(time) accordingly
