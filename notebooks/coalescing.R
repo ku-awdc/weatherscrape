@@ -25,7 +25,13 @@ for(i in seq_len(nrow(to_scrape))){
     if(!file.exists(fn)){
       wthr <- fetch_weather(latlong[1], latlong[2], year, elevation, format=FALSE)
       qsave(wthr, fn)
-      Sys.sleep(60*30)
+      # 15 minute intervals are fine: results in 5760 API calls per day
+      # i.e. it will take 1617/(4*24) = 17 days per year to scrape
+      Sys.sleep(60*15)
+
+      # Note: for rapid-fire scraping, we could do 15 second delays for 60 locations
+      # (will take ~15 mins for 3600 API calls) - a full year will take 27 days
+      # [this could be repeated up to twice per day, but don't do this]
     }
 
     stopifnot(file.exists(fn))

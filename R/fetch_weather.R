@@ -1,10 +1,10 @@
 #' Fetch standard weather parameters from OpenMeteo for a given latitude/longitude.
 #'
 #' @details
-#' Fetching data for a 12-month period counts as 60 API calls, so you must not
+#' Fetching data for a 12-month period counts as ~60 (2024=57.4) API calls, so you must not
 #' exceed 10 locations per minute and/or 80 per hour and/or 160 per day (for a
-#' full year at a time). Modifying the time period has a linear effect on the
-#' number of API calls.
+#' full year at a time) - see https://open-meteo.com/en/terms.
+#' Modifying the time period has a linear effect on the number of API calls.
 #'
 #' @param latitude a scalar latitude (WGS84)
 #' @param longitude a scalar longitude (WGS84)
