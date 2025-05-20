@@ -42,4 +42,8 @@ for(i in seq_len(nrow(to_scrape))){
 
 }
 
+try({
+  all_wthr <- bind_rows(all_wthr)
+})
+
 qsave(all_wthr, str_c(base_path, year, "/weather_", year, ".rqs"))
