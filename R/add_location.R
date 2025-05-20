@@ -1,6 +1,6 @@
 #' Title
 #'
-#' @importFrom gtools baseOf
+# ' @importFrom gtools baseOf
 #'
 #' @export
 add_location <- function(locations, historical=FALSE, current=FALSE, forecast=FALSE){

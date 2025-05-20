@@ -1,23 +1,26 @@
 Package: weatherscrape
 Title: What the Package Does (One Line, Title Case)
-Version: 0.1.0-1
-Date: 2023-12-22
+Version: 0.2.0-1
+Date: 2025-05-20
 Description: What the package does (one paragraph).
 Authors@R:
   c(
-    person(given="Joe", family="Bloggs", email="joe@bloggs.com", role=c("aut", "cre"))
+    person(given="Matt", family="Denwood", email="md@sund.ku.dk", role=c("aut", "cre"))
   )    
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
 Depends:
   R (>= 4.1.0)
 Imports:
+  jsonlite,
+  checkmate,
+  qs,
+  tibble,
   rlang,
   dplyr,
-  tibble,
-  openmeteo
+  tibble
 Suggests: 
   neatpkg,
   knitr,

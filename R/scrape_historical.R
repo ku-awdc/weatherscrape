@@ -8,8 +8,8 @@
 #' @importFrom rlang .data
 #' @import dplyr
 #' @import stringr
-#' @importFrom pbapply pblapply
-#' @importFrom RJSONIO fromJSON
+# ' @importFrom pbapply pblapply
+# ' @importFrom RJSONIO fromJSON
 #'
 #' @export
 scrape_historical <- function(locations, start_date, n_days=7L, time_out=0.25){
