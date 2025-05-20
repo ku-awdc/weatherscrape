@@ -14,7 +14,7 @@ all_wthr <- vector("list", length=nrow(grids))
 
 for(i in seq_len(nrow(to_scrape))){
 
-  try({
+  ss <- try({
     grid <- to_scrape[i,]
     gid <- grid[["GridID"]]
     cat(gid, " (#", i, ") at ", as.character(Sys.time()), "\n", sep="")
@@ -39,6 +39,11 @@ for(i in seq_len(nrow(to_scrape))){
     all_wthr[[i]] <- wthr
 
   })
+
+  ## If we get an error, do a time out:
+  if(inherits(ss, "try-error")){
+    Sys.sleep(60*30)
+  }
 
 }
 
