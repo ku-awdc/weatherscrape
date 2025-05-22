@@ -21,7 +21,8 @@ scrape_weather(
   path = "~/weather_scrape",
   max_scrapes = 60L,
   interval = "15s",
-  fail_interval = "abort"
+  fail_interval = "abort",
+  progress = c("pb", "log", "none")
 )
 }
 \arguments{
@@ -40,6 +41,8 @@ scrape_weather(
 \item{interval}{the interval between scrapes (should end in s, m or h)}
 
 \item{fail_interval}{a pause interval following an unsuccessful scrape (should end in s, m or h)}
+
+\item{progress}{the type of progress update to show - either "pb", "log" or "none"}
 }
 \value{
 a data frame showing the scraping status of each location, invisibly

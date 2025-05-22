@@ -47,7 +47,7 @@ sample_elevation <- function(polygon, n_points=100L){
 
   grid |>
     as_tibble() |>
-    select(GridID, GridScale) |>
+    select(.data$GridID, .data$GridScale) |>
     expand_grid(
       tibble(
         Elevation = fromJSON(rr)[["elevation"]],

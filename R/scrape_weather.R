@@ -9,6 +9,7 @@
 #' @param max_scrapes the maximum number of scrapes to run
 #' @param interval the interval between scrapes (should end in s, m or h)
 #' @param fail_interval a pause interval following an unsuccessful scrape (should end in s, m or h)
+#' @param progress the type of progress update to show - either "pb", "log" or "none"
 #'
 #' @returns a data frame showing the scraping status of each location, invisibly
 #'
@@ -31,36 +32,39 @@
 #' to \code{\link{fetch_weather}} also count against this.
 #'
 #' @importFrom qs qsave qread
-#' @importFrom pbapply pblapply pbsapply
+#' @importFrom pbapply pblapply
 NULL
 
 #' @rdname scrape_weather
 #' @export
 scrape_burst_dk <- function(year, path = "~/weather_scrape"){
-  locations <- weatherscrape::weather_locations |> filter(GridScale=="10x10km")
-  scrape_weather(year=year, path=path, max_scrapes = 60L, interval = "15s", fail_interval = "abort")
+  locations <- weatherscrape::weather_locations |> filter(.data$GridScale=="10x10km")
+  scrape_weather(year=year, path=path, max_scrapes = 60L, interval = "15s", fail_interval = "abort", progress = "pb")
 }
 
 #' @rdname scrape_weather
 #' @export
 scrape_burst_eu <- function(year, path = "~/weather_scrape"){
-  locations <- weatherscrape::weather_locations |> filter(GridScale=="100x100km")
-  scrape_weather(year=year, path=path, max_scrapes = 60L, interval = "15s", fail_interval = "abort")
+  locations <- weatherscrape::weather_locations |> filter(.data$GridScale=="100x100km")
+  scrape_weather(year=year, path=path, max_scrapes = 60L, interval = "15s", fail_interval = "abort", progress = "pb")
 }
 
 
 #' @rdname scrape_weather
 #' @export
 scrape_continual <- function(year, path = "~/weather_scrape"){
-  scrape_weather(year=year, path=path, max_scrapes = Inf, interval = "15m", fail_interval = "1h")
+  scrape_weather(year=year, path=path, max_scrapes = NA_integer_, interval = "15m", fail_interval = "1h", progress = "log")
 }
 
 
 #' @rdname scrape_weather
 #' @export
-scrape_weather <- function(year, start_date = as_date(str_c(year, "-01-01")), end_date = as_date(str_c(year, "12-31")), locations = NULL, path = "~/weather_scrape", max_scrapes = 60L, interval = "15s", fail_interval = "abort"){
+scrape_weather <- function(year, start_date = as_date(str_c(year, "-01-01")), end_date = as_date(str_c(year, "12-31")), locations = NULL, path = "~/weather_scrape", max_scrapes = 60L, interval = "15s", fail_interval = "abort", progress = c("pb", "log", "none")){
 
-  cat("IMPORTANT NOTE: Please check that you are not on a KU network (including VPN).\n\t\tIf you are, then abort this function call now!!!\n")
+  cat("\n----------------------------------------------------------------------\n")
+  cat("IMPORTANT NOTE:\n\tPlease check that you are not on a KU network (including VPN).\n\tIf you are, then abort this function call now!!!\n")
+  cat("----------------------------------------------------------------------\n\n")
+
   assert_date(start_date, any.missing=FALSE, len=1L, lower=as_date("1900-01-01"))
   assert_date(end_date, any.missing=FALSE, len=1L, lower=start_date, upper=(Sys.Date() - 7L))
   stopifnot(strftime(start_date, "%Y") == strftime(end_date, "%Y"))
@@ -94,7 +98,7 @@ scrape_weather <- function(year, start_date = as_date(str_c(year, "-01-01")), en
   }
   fctl <- c("Pending","Failed","Complete")
   locations |>
-    mutate(Status = if_else(files_present(ID), "Complete", "Pending") |> fct(levels=fctl)) ->
+    mutate(Status = if_else(files_present(.data$ID), "Complete", "Pending") |> fct(levels=fctl)) ->
     locations
   if(!"Priority" %in% names(locations)) locations <- locations |> mutate(Priority = row_number())
 
@@ -103,7 +107,8 @@ scrape_weather <- function(year, start_date = as_date(str_c(year, "-01-01")), en
   stopifnot(units %in% c("s", "m", "h", "f"))
   interval_s <- str_sub(interval, start=1L, end=-2L) |> as.numeric() |> {\(x) x * case_when(units%in%c("s","f") ~ 1L, units=="m" ~ 60L, units=="h" ~ 60L^2L)}()
   assert_number(interval_s, lower=if_else(units!="f", 15, 1), finite=TRUE)
-  qassert(max_scrapes, "X1[1,]")
+  qassert(max_scrapes, "x1[1,)")
+  if(is.na(max_scrapes)) max_scrapes <- Inf
   if(units!="f" && max_scrapes > 60L && interval_s < 15*60) stop("A minimum interval of 15m is required for max_scrapes > 60")
   qassert(fail_interval, "S1")
   if(fail_interval=="abort") fail_interval <- "Infs"
@@ -111,6 +116,22 @@ scrape_weather <- function(year, start_date = as_date(str_c(year, "-01-01")), en
   stopifnot(units %in% c("s", "m", "h", "f"))
   fail_interval_s <- str_sub(fail_interval, start=1L, end=-2L) |> as.numeric() |> {\(x) x * case_when(units%in%c("s","f") ~ 1L, units=="m" ~ 60L, units=="h" ~ 60L^2L)}()
   assert_number(fail_interval_s, lower=if_else(units!="f", 15*60, 1))
+
+  progress <- match.arg(progress)
+  if(progress=="pb"){
+    applyfun <- pblapply
+    progressfun <- function(x){ }
+  }else if(progress=="log"){
+    applyfun <- lapply
+    progressfun <- function(x){
+      cat("\tScraping ", x[["ID"]], " at ", as.character(Sys.time()), "...\n", sep="")
+    }
+  }else if(progress=="none"){
+    applyfun <- lapply
+    progressfun <- function(x){ }
+  }else{
+    stop("Unrecognised progress type")
+  }
 
   if(is.infinite(max_scrapes)){
     cat("Beginning continual scraping with interval = ", interval, " on ", as.character(Sys.time()), "\n", sep="", append=TRUE, file=file.path(path, year, "log.txt"))
@@ -131,9 +152,9 @@ scrape_weather <- function(year, start_date = as_date(str_c(year, "-01-01")), en
 
     locations |>
       mutate(Index = row_number()) |>
-      filter(Status != "Complete") |>
-      arrange(Status, Priority) |>
-      pull(Index) ->
+      filter(.data$Status != "Complete") |>
+      arrange(.data$Status, .data$Priority) |>
+      pull(.data$Index) ->
       indexes_using
 
     if(length(indexes_using) == 0L) stop("An unexpected error occured (indexes_using has length 0) - please report to Matt!")
@@ -153,10 +174,11 @@ scrape_weather <- function(year, start_date = as_date(str_c(year, "-01-01")), en
       slice(indexes_using) |>
       rowwise() |>
       group_split() |>
-      pbsapply(\(x){
+      applyfun(\(x){
 
+        if(!is.na(x[["Status"]])) Sys.sleep(interval_s)
+        progressfun(x)
         ss <- try({
-          if(!is.na(x[["Status"]])) Sys.sleep(interval_s)
           wthr <- fetch_weather(latitude=x[["Latitude"]], longitude=x[["Longitude"]], elevation=x[["MeanElevation"]], start_date=start_date, end_date=end_date, format=TRUE)
         })
         if(inherits(ss, "try-error")){
@@ -166,16 +188,23 @@ scrape_weather <- function(year, start_date = as_date(str_c(year, "-01-01")), en
           return(fct("Failed", levels=fctl))
         }
 
-        wthr <- wthr |> mutate(ID = x[["ID"]]) |> select(ID, everything())
+        wthr <- wthr |> mutate(ID = x[["ID"]]) |> select(.data$ID, everything())
         qsave(wthr, file.path(path, year, str_c(x[["ID"]], ".rqs")))
 
-        return(fct("Complete", levels=fctl))
+        return(x |> mutate(Status = fct("Complete", levels=fctl)))
 
-      }) ->
+      }) |>
+      bind_rows() ->
       new_status
 
-    stopifnot(length(new_status) == length(indexes_using))
-    locations[["Status"]][indexes_using] <- new_status
+    locations |>
+      full_join(
+        new_status |> select(.data$ID, NewStatus = .data$Status),
+        by = join_by("ID")
+      ) |>
+      mutate(Status = if_else(is.na(.data$NewStatus), .data$Status, .data$NewStatus)) |>
+      select(-.data$NewStatus) ->
+      locations
 
     if(!is.infinite(max_scrapes)){
       scrapes_remaining <- scrapes_remaining - length(indexes_using)
@@ -195,7 +224,7 @@ scrape_weather <- function(year, start_date = as_date(str_c(year, "-01-01")), en
       bind_rows() ->
       all_wthr
 
-    days_per_id <- all_wthr |> count(ID)
+    days_per_id <- all_wthr |> count(.data$ID)
     stopifnot(
       days_per_id[["n"]] == ((end_date-start_date)+1L),
       nrow(days_per_id) == nrow(locations),
@@ -208,12 +237,12 @@ scrape_weather <- function(year, start_date = as_date(str_c(year, "-01-01")), en
     stopifnot(!file.exists(outfile))
     qsave(all_wthr, file.path(path, outfile), preset="archive")
 
-    cat("Scraping completed on ", as.character(Sys.time()), " - please send '", outfile, "' to Matt\n", sep="", append=TRUE, file=file.path(path, year, "log.txt"))
-    cat("Scraping completed - please send '", outfile, "' to Matt\n", sep="")
+    cat("Scraping completed on ", as.character(Sys.time()), " - please send '", outfile, "' to Matt.\n", sep="", append=TRUE, file=file.path(path, year, "log.txt"))
+    cat("Scraping completed - please send '", outfile, "' to Matt.\n", sep="")
   }else{
     complete <- sum(locations[["Status"]]=="Complete")
     failed <- sum(locations[["Status"]]=="Failed")
-    cat("Scraping terminated with ", complete, " (", round(complete/nrow(locations)*100, 1), "%) completed locations ", if(failed>0L) str_c("(and ", failed, " that failed during this session)"), sep="")
+    cat("Scraping terminated with ", complete, " (", round(complete/nrow(locations)*100, 1), "%) completed locations", if(failed>0L) str_c(" (and ", failed, " that failed during this session)"), ".", sep="")
   }
 
   # Return invisibly

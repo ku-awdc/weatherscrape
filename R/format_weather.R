@@ -52,25 +52,25 @@ format_weather <- function(weather){
   weather[["hourly"]] |>
     bind_cols() |>
     rename(date_time="time") |>
-    mutate(date_time = as_datetime(date_time, tz="UTC", format="%Y-%m-%dT%H:%M")) |>
-    mutate(date = as_date(date_time, tz="UTC")) |>
-    select(date, date_time, everything()) ->
+    mutate(date_time = as_datetime(.data$date_time, tz="UTC", format="%Y-%m-%dT%H:%M")) |>
+    mutate(date = as_date(.data$date_time, tz="UTC")) |>
+    select(.data$date, .data$date_time, everything()) ->
     hourly
 
-  num_per_day <- hourly |> count(date) |> pull(n)
+  num_per_day <- hourly |> count(.data$date) |> pull(.data$n)
   stopifnot(num_per_day == 24L)
 
   weather[["daily"]] |>
     bind_cols() |>
     rename(date="time") |>
-    mutate(date = as_date(date, format="%Y-%m-%d")) |>
+    mutate(date = as_date(.data$date, format="%Y-%m-%d")) |>
     mutate(across(c("sunrise","sunset"), \(x) as_datetime(x, tz="UTC", format="%Y-%m-%dT%H:%M"))) ->
     daily
 
   daily |>
     arrange(date) |>
     mutate(
-      hourly = hourly |> arrange(date) |> group_by(date) |> group_split() |> lapply(\(x) x |> select(-date))
+      hourly = hourly |> arrange(.data$date) |> group_by(.data$date) |> group_split() |> lapply(\(x) x |> select(-.data$date))
     ) ->
     wthr
 
