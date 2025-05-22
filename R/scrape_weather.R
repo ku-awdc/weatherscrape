@@ -1,9 +1,10 @@
 #' Scrape weather data for multiple locations (DO NOT USE FROM INSIDE KU OR KU VPN)
 #' @name scrape_weather
 #'
-#' @param year a single year to fetch (ignored if start_date/end_date are changed)
-#' @param start_date start date for the relevant period (inclusive)
-#' @param end_date end date for the relevant period (inclusive)
+#' @param year a single year providing a date range from 1st January to 31st December (inclusive), unless week is also specified (see below)
+#' @param week a single or range of weeks (ISO 8601, i.e. %V) to fetch - note that week 1 and/or 52/53 may contain dates outside the year (NOT CURRENTLY USED)
+#' @param start_date start date for the relevant period (inclusive; NOT CURRENTLY USED)
+#' @param end_date end date for the relevant period (inclusive; NOT CURRENTLY USED)
 #' @param locations a data frame of locations to scrape (optional - otherwise \code{\link{weather_locations}} is used)
 #' @param path a path to a folder to save results
 #' @param max_scrapes the maximum number of scrapes to run
@@ -59,20 +60,38 @@ scrape_continual <- function(year, path = "~/weather_scrape"){
 
 #' @rdname scrape_weather
 #' @export
-scrape_weather <- function(year, start_date = as_date(str_c(year, "-01-01")), end_date = as_date(str_c(year, "12-31")), locations = NULL, path = "~/weather_scrape", max_scrapes = 60L, interval = "15s", fail_interval = "abort", progress = c("pb", "log", "none")){
+scrape_weather <- function(year, week, start_date, end_date, locations = NULL, path = "~/weather_scrape", max_scrapes = 60L, interval = "15s", fail_interval = "abort", progress = c("pb", "log", "none")){
 
   cat("\n----------------------------------------------------------------------\n")
   cat("IMPORTANT NOTE:\n\tPlease check that you are not on a KU network (including VPN).\n\tIf you are, then abort this function call now!!!\n")
   cat("----------------------------------------------------------------------\n\n")
 
+  # TODO:
+  # - Combine first 4 arguments to get the date range (valid options are either just year, just year and week, or just start_date and end_date)
+  # - Pick name as: yXXXX, yXXXX_wXX, yXXXX_wrXX-XX, or drXXXXXXXX-XXXXXXXX depending on first 4 arguments
+  # - Change minimum interval for burst/continuous according to length of date range (i.e. API tokens per call)
+
+  name <- str_c("y", year)
+
+  if(!missing(week)) stop("The 'week' argument is not currently usable")
+  if(!missing(start_date)) stop("The 'start_date' argument is not currently usable")
+  if(!missing(end_date)) stop("The 'end_date' argument is not currently usable")
+
+  start_date <- as_date(str_c(year, "-01-01"))
+  end_date <- as_date(str_c(year, "-12-31"))
+
   assert_date(start_date, any.missing=FALSE, len=1L, lower=as_date("1900-01-01"))
   assert_date(end_date, any.missing=FALSE, len=1L, lower=start_date, upper=(Sys.Date() - 7L))
-  stopifnot(strftime(start_date, "%Y") == strftime(end_date, "%Y"))
-  year <- strftime(start_date, "%Y")
 
   qassert(path, str_c("S1"))
   if(!dir.exists(path)) dir.create(path)
-  if(!dir.exists(file.path(path, year))) dir.create(file.path(path, year))
+  if(!dir.exists(file.path(path, name))){
+    if(name==str_c("y", year) && dir.exists(file.path(path, year))){
+      ss <- file.rename(file.path(path, year), file.path(path, name))
+      if(!ss) stop("Error renaming directory - please report to Matt")
+    }
+  }
+  if(!dir.exists(file.path(path, name))) dir.create(file.path(path, name))
 
   if(is.null(locations)){
     locations <- weatherscrape::weather_locations
@@ -92,7 +111,7 @@ scrape_weather <- function(year, start_date = as_date(str_c(year, "-01-01")), en
 
   # Function to check if all files are present
   files_present <- function(x){
-    present <- list.files(file.path(path, year))
+    present <- list.files(file.path(path, name))
     expected <- str_c(x, ".rqs")
     expected %in% present
   }
@@ -114,7 +133,7 @@ scrape_weather <- function(year, start_date = as_date(str_c(year, "-01-01")), en
     cf <- file.path(path, "last_burst_date.rqs")
     if(file.exists(cf)){
       dt <- qread(cf)
-      if(dt == Sys.Date()) stop("You have already run a short-interval scrape today; please wait until tomorrow to re-run")
+      if(dt == Sys.Date()) stop("You have already run a short-interval scrape today;\nplease wait until tomorrow to run again!")
     }
     qsave(Sys.Date(), cf)
   }
@@ -143,16 +162,16 @@ scrape_weather <- function(year, start_date = as_date(str_c(year, "-01-01")), en
   }
 
   if(is.infinite(max_scrapes)){
-    cat("Beginning continual scraping with interval = ", interval, " on ", as.character(Sys.time()), "\n", sep="", append=TRUE, file=file.path(path, year, "log.txt"))
+    cat("Beginning continual scraping with interval = ", interval, " on ", as.character(Sys.time()), "\n", sep="", append=TRUE, file=file.path(path, name, "log.txt"))
   }else{
-    cat("Beginning ", max_scrapes, " scrapes with interval = ", interval, " on ", as.character(Sys.time()), "\n", sep="", append=TRUE, file=file.path(path, year, "log.txt"))
+    cat("Beginning ", max_scrapes, " scrapes with interval = ", interval, " on ", as.character(Sys.time()), "\n", sep="", append=TRUE, file=file.path(path, name, "log.txt"))
   }
 
   # Loop over locations
   pass <- 1L
   scrapes_remaining <- max_scrapes
 
-  while(!all(files_present(locations[["ID"]]))){
+  while(scrapes_remaining > 0L && !all(files_present(locations[["ID"]]))){
     if(is.infinite(max_scrapes)){
       cat("Starting pass #", pass, " (continual scraping with interval = ", interval, ")\n", sep="")
     }else{
@@ -168,7 +187,6 @@ scrape_weather <- function(year, start_date = as_date(str_c(year, "-01-01")), en
 
     if(length(indexes_using) == 0L) stop("An unexpected error occured (indexes_using has length 0) - please report to Matt!")
 
-    stopifnot(scrapes_remaining > 0L)
     if(!is.infinite(scrapes_remaining) && scrapes_remaining < length(indexes_using)){
       indexes_using <- indexes_using[1:scrapes_remaining]
     }
@@ -198,7 +216,7 @@ scrape_weather <- function(year, start_date = as_date(str_c(year, "-01-01")), en
         }
 
         wthr <- wthr |> mutate(ID = x[["ID"]]) |> select(.data$ID, everything())
-        qsave(wthr, file.path(path, year, str_c(x[["ID"]], ".rqs")), preset="archive")
+        qsave(wthr, file.path(path, name, str_c(x[["ID"]], ".rqs")), preset="archive")
 
         return(x |> mutate(Status = fct("Complete", levels=fctl)))
 
@@ -218,40 +236,44 @@ scrape_weather <- function(year, start_date = as_date(str_c(year, "-01-01")), en
     if(!is.infinite(max_scrapes)){
       scrapes_remaining <- scrapes_remaining - length(indexes_using)
       if(scrapes_remaining < 0L) stop("An unexpected error occured (scrapes_remaining is ", scrapes_remaining, ") - please report to Matt!")
-      if(scrapes_remaining == 0L) break
     }
     pass <- pass + 1L
   }
+
+  outfile <- str_c(name, "_l", nrow(locations), ".rqs")
+  rv <- list(folder = file.path(path, name), file = file.path(path, outfile), complete=FALSE, status = locations)
 
   # If all complete, save with archive, but re-check each output
   if(all(locations[["Status"]] == "Complete")){
     cat("Scraping complete: beginning final pass to load and re-save...\n")
 
-    pblapply(locations[["ID"]], function(x){
-      qread(file.path(path, year, str_c(x, ".rqs")))
+    applyfun(locations[["ID"]], function(x){
+      #format_weather(qread(file.path(path, name, str_c(x, ".rqs")))) |>
+      #  mutate(ID = x) |>
+      #  select(ID, everything())
+      qread(file.path(path, name, str_c(x, ".rqs")))
     }) |>
       bind_rows() ->
       all_wthr
 
     days_per_id <- all_wthr |> count(.data$ID)
     stopifnot(
+      all_wthr[["Date"]] >= start_date,
+      all_wthr[["Date"]] <= end_date,
       days_per_id[["n"]] == ((end_date-start_date)+1L),
       nrow(days_per_id) == nrow(locations),
       locations[["ID"]] %in% days_per_id[["ID"]],
-      sapply(all_wthr[["hourly"]], nrow) == 24L,
-      strftime(all_wthr[["date"]], "%Y") == year
+      sapply(all_wthr[["hourly"]], nrow) == 24L
       )
 
-    outfile <- str_c("weather_", year, "_", nrow(all_wthr), "locns.rqs")
-    stopifnot(!file.exists(outfile))
+    stopifnot(!file.exists(file.path(path, outfile)))
+    cat("Saving final archive file (this will take some time)...\n")
     qsave(all_wthr, file.path(path, outfile), preset="archive")
 
-    ## TODO:
-    # - fix error with 2024 data
-    # - auto-change year to week or quarter or month or half depending on date range
-
-    cat("Scraping completed on ", as.character(Sys.time()), " - please send '", outfile, "' to Matt.\n", sep="", append=TRUE, file=file.path(path, year, "log.txt"))
+    cat("Scraping completed on ", as.character(Sys.time()), " - please send '", outfile, "' to Matt.\n", sep="", append=TRUE, file=file.path(path, name, "log.txt"))
     cat("Scraping completed - please send '", outfile, "' to Matt.\n", sep="")
+    rv[["complete"]] <- TRUE
+
   }else{
     complete <- sum(locations[["Status"]]=="Complete")
     failed <- sum(locations[["Status"]]=="Failed")
@@ -259,5 +281,5 @@ scrape_weather <- function(year, start_date = as_date(str_c(year, "-01-01")), en
   }
 
   # Return invisibly
-  invisible(locations)
+  invisible(rv)
 }

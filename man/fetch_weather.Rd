@@ -7,10 +7,9 @@
 fetch_weather(
   latitude,
   longitude,
-  year,
   elevation = NA_real_,
-  start_date = as_date(str_c(year, "-01-01")),
-  end_date = as_date(str_c(year, "12-31")),
+  start_date,
+  end_date,
   format = TRUE
 )
 }
@@ -18,8 +17,6 @@ fetch_weather(
 \item{latitude}{a scalar latitude (WGS84)}
 
 \item{longitude}{a scalar longitude (WGS84)}
-
-\item{year}{a single year to fetch (ignored if start_date/end_date are changed)}
 
 \item{elevation}{the elevation to use for scraping (optional; if missing the elevation of the point location will be used)}
 

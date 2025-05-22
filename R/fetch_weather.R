@@ -8,7 +8,6 @@
 #'
 #' @param latitude a scalar latitude (WGS84)
 #' @param longitude a scalar longitude (WGS84)
-#' @param year a single year to fetch (ignored if start_date/end_date are changed)
 #' @param elevation the elevation to use for scraping (optional; if missing the elevation of the point location will be used)
 #' @param start_date start date for the relevant period (inclusive)
 #' @param end_date end date for the relevant period (inclusive)
@@ -22,7 +21,7 @@
 #' @importFrom jsonlite fromJSON
 #'
 #' @export
-fetch_weather <- function(latitude, longitude, year, elevation=NA_real_, start_date = as_date(str_c(year, "-01-01")), end_date = as_date(str_c(year, "12-31")), format=TRUE){
+fetch_weather <- function(latitude, longitude, elevation=NA_real_, start_date, end_date, format=TRUE){
 
   assert_number(latitude, lower=-90, upper=90)
   assert_number(longitude, lower=-180, upper=180)

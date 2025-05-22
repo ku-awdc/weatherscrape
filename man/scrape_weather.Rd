@@ -15,8 +15,9 @@ scrape_continual(year, path = "~/weather_scrape")
 
 scrape_weather(
   year,
-  start_date = as_date(str_c(year, "-01-01")),
-  end_date = as_date(str_c(year, "12-31")),
+  week,
+  start_date,
+  end_date,
   locations = NULL,
   path = "~/weather_scrape",
   max_scrapes = 60L,
@@ -26,13 +27,15 @@ scrape_weather(
 )
 }
 \arguments{
-\item{year}{a single year to fetch (ignored if start_date/end_date are changed)}
+\item{year}{a single year providing a date range from 1st January to 31st December (inclusive), unless week is also specified (see below)}
 
 \item{path}{a path to a folder to save results}
 
-\item{start_date}{start date for the relevant period (inclusive)}
+\item{week}{a single or range of weeks (ISO 8601, i.e. \%V) to fetch - note that week 1 and/or 52/53 may contain dates outside the year (NOT CURRENTLY USED)}
 
-\item{end_date}{end date for the relevant period (inclusive)}
+\item{start_date}{start date for the relevant period (inclusive; NOT CURRENTLY USED)}
+
+\item{end_date}{end date for the relevant period (inclusive; NOT CURRENTLY USED)}
 
 \item{locations}{a data frame of locations to scrape (optional - otherwise \code{\link{weather_locations}} is used)}
 
