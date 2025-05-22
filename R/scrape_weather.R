@@ -237,7 +237,10 @@ scrape_weather <- function(year, start_date = as_date(str_c(year, "-01-01")), en
     stopifnot(!file.exists(outfile))
     qsave(all_wthr, file.path(path, outfile), preset="archive")
 
-    ## TODO: fix error with 2024 data, and include #locations in file name so I can distinguish DK/EU/both
+    ## TODO:
+    # - fix error with 2024 data
+    # - include #locations in file name so I can distinguish DK/EU/both
+    # - for burst runs (<15m interval) save a last_run.rqs date in the parent folder and refuse to run again until the next day
 
     cat("Scraping completed on ", as.character(Sys.time()), " - please send '", outfile, "' to Matt.\n", sep="", append=TRUE, file=file.path(path, year, "log.txt"))
     cat("Scraping completed - please send '", outfile, "' to Matt.\n", sep="")
