@@ -189,7 +189,7 @@ scrape_weather <- function(year, start_date = as_date(str_c(year, "-01-01")), en
         }
 
         wthr <- wthr |> mutate(ID = x[["ID"]]) |> select(.data$ID, everything())
-        qsave(wthr, file.path(path, year, str_c(x[["ID"]], ".rqs")))
+        qsave(wthr, file.path(path, year, str_c(x[["ID"]], ".rqs")), preset="archive")
 
         return(x |> mutate(Status = fct("Complete", levels=fctl)))
 
