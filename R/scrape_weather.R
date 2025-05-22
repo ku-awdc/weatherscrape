@@ -109,7 +109,16 @@ scrape_weather <- function(year, start_date = as_date(str_c(year, "-01-01")), en
   assert_number(interval_s, lower=if_else(units!="f", 15, 1), finite=TRUE)
   qassert(max_scrapes, "x1[1,)")
   if(is.na(max_scrapes)) max_scrapes <- Inf
-  if(units!="f" && max_scrapes > 60L && interval_s < 15*60) stop("A minimum interval of 15m is required for max_scrapes > 60")
+  if(units!="f" && interval_s < 15*60){
+    if(max_scrapes > 60L) stop("A minimum interval of 15m is required for max_scrapes > 60")
+    cf <- file.path(path, "last_burst_date.rqs")
+    if(file.exists(cf)){
+      dt <- qread(cf)
+      if(dt == Sys.Date()) stop("You have already run a short-interval scrape today; please wait until tomorrow to re-run")
+    }
+    qsave(Sys.Date(), cf)
+  }
+
   qassert(fail_interval, "S1")
   if(fail_interval=="abort") fail_interval <- "Infs"
   units <- str_sub(fail_interval, start=-1L, end=-1L)
@@ -233,14 +242,13 @@ scrape_weather <- function(year, start_date = as_date(str_c(year, "-01-01")), en
       strftime(all_wthr[["date"]], "%Y") == year
       )
 
-    outfile <- str_c("weather_", year, ".rqs")
+    outfile <- str_c("weather_", year, "_", nrow(all_wthr), "locns.rqs")
     stopifnot(!file.exists(outfile))
     qsave(all_wthr, file.path(path, outfile), preset="archive")
 
     ## TODO:
     # - fix error with 2024 data
-    # - include #locations in file name so I can distinguish DK/EU/both
-    # - for burst runs (<15m interval) save a last_run.rqs date in the parent folder and refuse to run again until the next day
+    # - auto-change year to week or quarter or month or half depending on date range
 
     cat("Scraping completed on ", as.character(Sys.time()), " - please send '", outfile, "' to Matt.\n", sep="", append=TRUE, file=file.path(path, year, "log.txt"))
     cat("Scraping completed - please send '", outfile, "' to Matt.\n", sep="")
