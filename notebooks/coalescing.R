@@ -57,4 +57,9 @@ try({
   all_wthr <- bind_rows(all_wthr)
 })
 
-qsave(all_wthr, str_c(base_path, year, "/weather_", year, ".rqs"))
+#qsave(all_wthr, str_c(base_path, year, "/weather_", year, ".rqs"))
+
+wthr <- qread(str_c(base_path, year, "/weather_", year, ".rqs"))
+wthr |>
+  count(GridID) |>
+  count(n)
