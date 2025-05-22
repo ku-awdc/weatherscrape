@@ -6,10 +6,6 @@
 #' Some description of the package
 #'
 #' @examples
-#' ## An example function:
-#' df <- example_function()
-#' df
-#'
 #' ## To cite this package in publications use:
 #' citation("weatherscrape")
 #'

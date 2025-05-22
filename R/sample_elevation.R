@@ -7,11 +7,14 @@
 #' One call to this function takes a single API call (I think)
 #'
 #' @import sf
+#' @importFrom forcats fct
+#' @importFrom tidyr expand_grid
 #'
 #' @export
-sample_elevation <- function(grid, n_points=100L){
+sample_elevation <- function(polygon, n_points=100L){
 
   warning("Change grid argument to an sf or sfc object in sample_elevation")
+  grid <- polygon
 
   stopifnot(is.data.frame(grid), inherits(grid, "sf"), nrow(grid)==1L)
   stopifnot(n_points >= 1L)

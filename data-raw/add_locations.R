@@ -14,11 +14,11 @@ grids |>
   mutate(LongLat = st_coordinates(Centroid |> st_transform("WGS84"))) |>
   mutate(Latitude = LongLat[,2], Longitude = LongLat[,1]) |>
   as_tibble() |>
-  select(Priority, GridID, GridScale, Latitude, Longitude, MeanElevation) ->
-  weather_points
+  select(Priority, ID=GridID, GridScale, Latitude, Longitude, MeanElevation) ->
+  weather_locations
 
 ggplot() +
   geom_sf(data=countries) +
-  geom_sf(data=weather_points |> st_as_sf(coords = c("Longitude", "Latitude"), crs="WGS84"), mapping=aes(col=MeanElevation))
+  geom_sf(data=weather_locations |> st_as_sf(coords = c("Longitude", "Latitude"), crs="WGS84"), mapping=aes(col=MeanElevation))
 
-usethis::use_data(weather_points)
+usethis::use_data(weather_locations, overwrite = TRUE)

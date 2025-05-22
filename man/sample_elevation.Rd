@@ -4,12 +4,12 @@
 \alias{sample_elevation}
 \title{Sample elevation for a specified polygon}
 \usage{
-sample_elevation(grid, n_points = 100L)
+sample_elevation(polygon, n_points = 100L)
 }
 \arguments{
-\item{n_points}{the number of points to sample}
-
 \item{polygon}{an sf (or sfc) object representing a spatial polygon within which to sample}
+
+\item{n_points}{the number of points to sample}
 }
 \description{
 Sample elevation for a specified polygon

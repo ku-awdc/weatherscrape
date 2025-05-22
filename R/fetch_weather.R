@@ -16,7 +16,7 @@
 #'
 #' @returns a list of data frames giving (1) daily variables, (2) hourly variables (in UTC) for the provided latitude/longitude/elevation
 #'
-#' @importFrom checkmate qassert assert_number assert_date
+#' @importFrom checkmate qassert assert_number assert_date assert_numeric assert_vector
 #' @importFrom stringr str_c
 #' @importFrom lubridate as_date as_datetime
 #' @importFrom jsonlite fromJSON
@@ -26,8 +26,8 @@ fetch_weather <- function(latitude, longitude, year, elevation=NA_real_, start_d
 
   assert_number(latitude, lower=-90, upper=90)
   assert_number(longitude, lower=-180, upper=180)
-  assert_number(elevation, na.ok=TRUE, lower=0, upper=10000)
-  assert_date(start_date, any.missing=FALSE, len=1L)
+  assert_number(elevation, na.ok=TRUE, lower=-500, upper=10000) # Note: lowest possible place is below sea level!
+  assert_date(start_date, any.missing=FALSE, len=1L, lower=as_date("1900-01-01"))
   assert_date(end_date, any.missing=FALSE, len=1L, lower=start_date, upper=(Sys.Date() - 7L))
 
   rqst <- str_c(
@@ -50,6 +50,7 @@ fetch_weather <- function(latitude, longitude, year, elevation=NA_real_, start_d
 
   if(format){
     wthr <- format_weather(wthr)
+    stopifnot(nrow(wthr) == ((end_date - start_date) + 1L))
   }
 
   return(wthr)

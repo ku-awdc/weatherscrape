@@ -57,6 +57,9 @@ format_weather <- function(weather){
     select(date, date_time, everything()) ->
     hourly
 
+  num_per_day <- hourly |> count(date) |> pull(n)
+  stopifnot(num_per_day == 24L)
+
   weather[["daily"]] |>
     bind_cols() |>
     rename(date="time") |>
