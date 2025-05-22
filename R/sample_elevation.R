@@ -1,11 +1,12 @@
 #' Sample elevation for a specified polygon
 #'
-#' @param grid
-#' @param n_points
+#' @param polygon an sf (or sfc) object representing a spatial polygon within which to sample
+#' @param n_points the number of points to sample
 #'
 #' @details
 #' One call to this function takes a single API call (I think)
 #'
+#' @import sf
 #'
 #' @export
 sample_elevation <- function(grid, n_points=100L){

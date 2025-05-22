@@ -1,11 +1,3 @@
-#' Title
-#'
-#' @param folder
-#'
-#' @importFrom qs qsave qread
-#' @importFrom tibble tibble
-#'
-#' @export
 set_weather_folder <- function(folder){
   stopifnot(dir.exists(folder))
 

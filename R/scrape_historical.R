@@ -1,17 +1,3 @@
-#' Title
-#'
-#' @param locations
-#' @param start_date
-#' @param n_days
-#' @param time_out
-#'
-#' @importFrom rlang .data
-#' @import dplyr
-#' @import stringr
-# ' @importFrom pbapply pblapply
-# ' @importFrom RJSONIO fromJSON
-#'
-#' @export
 scrape_historical <- function(locations, start_date, n_days=7L, time_out=0.25){
 
   stopifnot(test_weather_folder())

@@ -1,11 +1,3 @@
-#' Title
-#'
-#' @param credentials
-#' @param historical
-#' @param current
-#' @param forecast
-#'
-#' @export
 save_credentials <- function(credentials, historical=FALSE, current=FALSE, forecast=FALSE){
 
   stopifnot(test_weather_folder())

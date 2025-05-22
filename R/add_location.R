@@ -1,8 +1,3 @@
-#' Title
-#'
-# ' @importFrom gtools baseOf
-#'
-#' @export
 add_location <- function(locations, historical=FALSE, current=FALSE, forecast=FALSE){
 
   stopifnot(test_weather_folder())

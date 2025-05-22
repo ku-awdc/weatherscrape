@@ -35,6 +35,8 @@
 #'
 #' @import dplyr
 #' @import tibble
+#' @import stringr
+#' @importFrom rlang .data
 #'
 #' @export
 format_weather <- function(weather){

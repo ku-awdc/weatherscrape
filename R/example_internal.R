@@ -1,11 +1,3 @@
-## This function is not exported i.e. it is internal to your package
-
-## We use functions from other packages, so we must import them
-## AND also include them in the DESCRIPTION under Imports:
-#' @importFrom tibble tibble
-#' @importFrom dplyr mutate
-#' @importFrom rlang .data
-
 example_internal <- function(argument){
 
   ## Check that the argument is numeric and not missing:
