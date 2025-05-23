@@ -70,6 +70,8 @@ scrape_weather <- function(year, week, start_date, end_date, locations = NULL, p
   # - Combine first 4 arguments to get the date range (valid options are either just year, just year and week, or just start_date and end_date)
   # - Pick name as: yXXXX, yXXXX_wXX, yXXXX_wrXX-XX, or drXXXXXXXX-XXXXXXXX depending on first 4 arguments
   # - Change minimum interval for burst/continuous according to length of date range (i.e. API tokens per call)
+  # - Change last burst date to date/time to account for time zones
+  # - Modify fail_interval_s so it accounts for interval_s (as it is added)
 
   name <- str_c("y", year)
 
@@ -192,7 +194,7 @@ scrape_weather <- function(year, week, start_date, end_date, locations = NULL, p
     }
 
     ## Hack to avoid sleeping before the initial scrape:
-    if(pass==1L){
+    if(progress!="pb" && pass==1L){
       stopifnot(!is.na(locations[["Status"]]))
       locations[["Status"]][indexes_using[1L]] <- NA_character_
     }
