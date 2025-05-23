@@ -128,7 +128,7 @@ scrape_weather <- function(year, week, start_date, end_date, locations = NULL, p
   stopifnot(units %in% c("s", "m", "h", "f"))
   interval_s <- str_sub(interval, start=1L, end=-2L) |> as.numeric() |> {\(x) x * case_when(units%in%c("s","f") ~ 1L, units=="m" ~ 60L, units=="h" ~ 60L^2L)}()
   assert_number(interval_s, lower=if_else(units!="f", 15, 1), finite=TRUE)
-  qassert(max_scrapes, "x1[1,)")
+  qassert(max_scrapes, "x1[0,)")
   if(is.na(max_scrapes)) max_scrapes <- Inf
   if(units!="f" && interval_s < 15*60){
     if(max_scrapes > 60L) stop("A minimum interval of 15m is required for max_scrapes > 60")
