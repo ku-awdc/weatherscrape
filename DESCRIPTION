@@ -1,7 +1,7 @@
 Package: weatherscrape
 Title: What the Package Does (One Line, Title Case)
-Version: 0.2.3-1
-Date: 2025-05-23
+Version: 0.2.3-2
+Date: 2025-05-25
 Description: What the package does (one paragraph).
 Authors@R:
   c(
