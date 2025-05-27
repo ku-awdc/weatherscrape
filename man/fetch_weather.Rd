@@ -33,6 +33,11 @@ a list of data frames giving (1) daily variables, (2) hourly variables (in UTC) 
 Fetch standard weather parameters from OpenMeteo for a given latitude/longitude.
 }
 \details{
+NOTE:  IF YOU USE THIS FUNCTION FROM INSIDE A KU NETWORK OR WHILE
+CONNECTED TO THE KU VPN THEN DO SO A MAX OF ONCE PER DAY!
+THIS ALSO APPLIES TO YOUR OWN NETWORK IF YOU ARE ALSO USING
+THE \code{\link{scrape_weather}} functions
+
 Fetching data for a 12-month period counts as ~60 (2024=57.4) API calls, so you must not
 exceed 10 locations per minute and/or 80 per hour and/or 160 per day (for a
 full year at a time) - see https://open-meteo.com/en/terms.

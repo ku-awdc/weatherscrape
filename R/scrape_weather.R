@@ -1,4 +1,4 @@
-#' Scrape weather data for multiple locations (DO NOT USE FROM INSIDE KU OR KU VPN)
+#' Scrape weather data for multiple locations (USE ONLY ONCE PER DAY, AND NEVER FROM INSIDE KU OR WHILE CONNECTED TO THE KU VPN)
 #' @name scrape_weather
 #'
 #' @param year a single year providing a date range from 1st January to 31st December (inclusive), unless week is also specified (see below)
@@ -15,7 +15,9 @@
 #' @returns a data frame showing the scraping status of each location, invisibly
 #'
 #' @details
-#' NOTE:  DO NOT USE THESE FUNCTIONS FROM INSIDE A KU NETWORK OR WHILE CONNECTED TO THE VPN
+#' NOTE:  DO NOT USE THESE FUNCTIONS FROM INSIDE A KU NETWORK OR WHILE
+#' CONNECTED TO THE KU VPN.  ALSO MAKE SURE YOU ONLY START A SINGLE SCRAPE
+#' FROM WITHIN YOUR OWN NETWORK PER DAY!!!
 #'
 #' The OpenMeto fair usage policy (https://open-meteo.com/en/terms) allows us
 #' to make 10000 API calls per day and/or 5000 per day and/or 600 per minute.
@@ -30,7 +32,8 @@
 #' intermittently BUT A MAXIMUM OF ONCE PER DAY.
 #'
 #' Note that API limits are shared by everyone on your network, and any calls
-#' to \code{\link{fetch_weather}} also count against this.
+#' to \code{\link{fetch_weather}} also count against this. If you are not sure
+#' what this means then please ask Matt before using the functions.
 #'
 #' @importFrom qs qsave qread
 #' @importFrom pbapply pblapply
@@ -63,7 +66,11 @@ scrape_continual <- function(year, path = "~/weather_scrape"){
 scrape_weather <- function(year, week, start_date, end_date, locations = NULL, path = "~/weather_scrape", max_scrapes = 60L, interval = "15s", fail_interval = "abort", progress = c("pb", "log", "none")){
 
   cat("\n----------------------------------------------------------------------\n")
-  cat("IMPORTANT NOTE:\n\tPlease check that you are not on a KU network (including VPN).\n\tIf you are, then abort this function call now!!!\n")
+  cat("IMPORTANT NOTE:
+    \tPlease check that you are not on a KU network (including VPN).
+    \tAlso, do not use this function multiple times from your own network
+    \t(either on the same computer or different computers).
+    \tIf either of these apply then abort this function call now!!!\n")
   cat("----------------------------------------------------------------------\n\n")
 
   # TODO:

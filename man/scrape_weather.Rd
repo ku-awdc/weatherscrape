@@ -5,7 +5,7 @@
 \alias{scrape_burst_dk}
 \alias{scrape_burst_eu}
 \alias{scrape_continual}
-\title{Scrape weather data for multiple locations (DO NOT USE FROM INSIDE KU OR KU VPN)}
+\title{Scrape weather data for multiple locations (USE ONLY ONCE PER DAY, AND NEVER FROM INSIDE KU OR WHILE CONNECTED TO THE KU VPN)}
 \usage{
 scrape_burst_dk(year, path = "~/weather_scrape")
 
@@ -51,10 +51,12 @@ scrape_weather(
 a data frame showing the scraping status of each location, invisibly
 }
 \description{
-Scrape weather data for multiple locations (DO NOT USE FROM INSIDE KU OR KU VPN)
+Scrape weather data for multiple locations (USE ONLY ONCE PER DAY, AND NEVER FROM INSIDE KU OR WHILE CONNECTED TO THE KU VPN)
 }
 \details{
-NOTE:  DO NOT USE THESE FUNCTIONS FROM INSIDE A KU NETWORK OR WHILE CONNECTED TO THE VPN
+NOTE:  DO NOT USE THESE FUNCTIONS FROM INSIDE A KU NETWORK OR WHILE
+CONNECTED TO THE KU VPN.  ALSO MAKE SURE YOU ONLY START A SINGLE SCRAPE
+FROM WITHIN YOUR OWN NETWORK PER DAY!!!
 
 The OpenMeto fair usage policy (https://open-meteo.com/en/terms) allows us
 to make 10000 API calls per day and/or 5000 per day and/or 600 per minute.
@@ -69,5 +71,6 @@ running continuously, or run the scrape_burst_dk or scrape_burst_eu functions
 intermittently BUT A MAXIMUM OF ONCE PER DAY.
 
 Note that API limits are shared by everyone on your network, and any calls
-to \code{\link{fetch_weather}} also count against this.
+to \code{\link{fetch_weather}} also count against this. If you are not sure
+what this means then please ask Matt before using the functions.
 }
