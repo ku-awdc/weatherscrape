@@ -15,8 +15,8 @@
 #'
 #' @returns a list of data frames giving (1) daily variables, (2) hourly variables (in UTC) for the provided latitude/longitude/elevation
 #'
-#' @importFrom checkmate qassert assert_number assert_date assert_numeric assert_vector
-#' @importFrom stringr str_c
+#' @importFrom checkmate matchArg qassert assert_number assert_date assert_numeric assert_vector
+#' @importFrom stringr str_c str_length str_sub
 #' @importFrom lubridate as_date as_datetime
 #' @importFrom jsonlite fromJSON
 #'
