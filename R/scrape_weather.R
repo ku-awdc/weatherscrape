@@ -43,14 +43,14 @@ NULL
 #' @export
 scrape_burst_dk <- function(year, path = "~/weather_scrape"){
   locations <- weatherscrape::weather_locations |> filter(.data$GridScale=="10x10km")
-  scrape_weather(year=year, path=path, max_scrapes = 60L, interval = "15s", fail_interval = "abort", progress = "pb")
+  scrape_weather(year=year, locations=locations, path=path, max_scrapes = 60L, interval = "15s", fail_interval = "abort", progress = "pb")
 }
 
 #' @rdname scrape_weather
 #' @export
 scrape_burst_eu <- function(year, path = "~/weather_scrape"){
   locations <- weatherscrape::weather_locations |> filter(.data$GridScale=="100x100km")
-  scrape_weather(year=year, path=path, max_scrapes = 60L, interval = "15s", fail_interval = "abort", progress = "pb")
+  scrape_weather(year=year, locations=locations, path=path, max_scrapes = 60L, interval = "15s", fail_interval = "abort", progress = "pb")
 }
 
 
