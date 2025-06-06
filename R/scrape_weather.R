@@ -68,8 +68,8 @@ scrape_weather <- function(year, week, start_date, end_date, locations = NULL, p
   cat("\n----------------------------------------------------------------------\n")
   cat("IMPORTANT NOTE:
     \tPlease check that you are not on a KU network (including VPN).
-    \tAlso, do not use this function multiple times from your own network
-    \t(either on the same computer or different computers).
+    \tAlso, do not use this function multiple times from your own
+    \tnetwork (either on the same computer or different computers).
     \tIf either of these apply then abort this function call now!!!\n")
   cat("----------------------------------------------------------------------\n\n")
 
