@@ -223,7 +223,7 @@ scrape_weather <- function(year, week, start_date, end_date, locations = NULL, p
           if(is.infinite(fail_interval_s)) stop("Error encountered: aborting")
           cat("Error encountered for ID ", x[["ID"]], ": pausing for ", fail_interval, "\n", sep="")
           Sys.sleep(fail_interval_s)
-          return(fct("Failed", levels=fctl))
+          return(x |> mutate(Status = fct("Failed", levels=fctl)))
         }
 
         wthr <- wthr |> mutate(ID = x[["ID"]]) |> select(.data$ID, everything())
