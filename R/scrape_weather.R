@@ -163,7 +163,7 @@ scrape_weather <- function(year, week, start_date, end_date, locations = NULL, p
   }else if(progress=="log"){
     applyfun <- lapply
     progressfun <- function(x){
-      cat("\tScraping ", x[["ID"]], " at ", as.character(Sys.time()), "...\n", sep="")
+      cat("\tScraping ", x[["ID"]], " at ", fmt_dttm(), "...\n", sep="")
     }
   }else if(progress=="none"){
     applyfun <- lapply
@@ -172,11 +172,20 @@ scrape_weather <- function(year, week, start_date, end_date, locations = NULL, p
     stop("Unrecognised progress type")
   }
 
+  locations |>
+    mutate(isComplete = .data$Status == "Complete") |>
+    count(.data$isComplete) |>
+    arrange(.data$isComplete) |>
+    pull(.data$n) ->
+    lnums
+
   if(is.infinite(max_scrapes)){
-    cat("Beginning continual scraping with interval = ", interval, " on ", as.character(Sys.time()), "\n", sep="", append=TRUE, file=file.path(path, name, "log.txt"))
+    msg <- c(str_c("Beginning continual scraping of ", lnums[1L], " (out of ", sum(lnums), ") locations from"), str_c("start date ", as.character(start_date), " with interval = ", interval, " on ", fmt_dttm()))
   }else{
-    cat("Beginning ", max_scrapes, " scrapes with interval = ", interval, " on ", as.character(Sys.time()), "\n", sep="", append=TRUE, file=file.path(path, name, "log.txt"))
+    msg <- c(str_c("Beginning a max of ", max_scrapes, " scrapes of ", lnums[1L], " (out of ", sum(lnums), ") locations from"), str_c("start date ", as.character(start_date), " with interval = ", interval, " on ", fmt_dttm()))
   }
+  cat(msg[1], "\n", msg[2], "\n\n", sep="")
+  cat(msg[1], msg[2], "\n", append=TRUE, file=file.path(path, name, "log.txt"))
 
   # Loop over locations
   pass <- 1L
@@ -281,7 +290,7 @@ scrape_weather <- function(year, week, start_date, end_date, locations = NULL, p
     cat("Saving final archive file (this will take some time)...\n")
     qsave(all_wthr, file.path(path, outfile), preset="archive")
 
-    cat("Scraping completed on ", as.character(Sys.time()), " - please send '", outfile, "' to Matt.\n", sep="", append=TRUE, file=file.path(path, name, "log.txt"))
+    cat("Scraping completed on ", fmt_dttm, " - please send '", outfile, "' to Matt.\n", sep="", append=TRUE, file=file.path(path, name, "log.txt"))
     cat("Scraping completed - please send '", outfile, "' to Matt.\n", sep="")
     rv[["complete"]] <- TRUE
 
@@ -293,4 +302,9 @@ scrape_weather <- function(year, week, start_date, end_date, locations = NULL, p
 
   # Return invisibly
   invisible(rv)
+}
+
+## Helper function:
+fmt_dttm <- function(dttm = Sys.time()){
+  strftime(dttm, "%Y-%m-%d at %H:%M")
 }
