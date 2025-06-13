@@ -184,7 +184,7 @@ scrape_weather <- function(year, week, start_date, end_date, locations = NULL, p
   }else{
     msg <- c(str_c("Beginning a max of ", max_scrapes, " scrapes of ", lnums[1L], " (out of ", sum(lnums), ") locations from"), str_c("start date ", as.character(start_date), " with interval = ", interval, " on ", fmt_dttm()))
   }
-  cat(msg[1], "\n", msg[2], "\n\n", sep="")
+  cat(msg[1], "\n", msg[2], "\n", "[Storage folder path: ", path.expand(path), "]\n\n", sep="")
   cat(msg[1], msg[2], "\n", append=TRUE, file=file.path(path, name, "log.txt"))
 
   # Loop over locations
