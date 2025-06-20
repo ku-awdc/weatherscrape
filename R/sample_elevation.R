@@ -8,7 +8,7 @@
 #'
 #' @import sf
 #' @importFrom forcats fct
-#' @importFrom tidyr expand_grid
+#' @importFrom tidyr expand_grid complete
 #'
 #' @export
 sample_elevation <- function(polygon, n_points=100L){

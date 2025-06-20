@@ -35,6 +35,7 @@
 #' to \code{\link{fetch_weather}} also count against this. If you are not sure
 #' what this means then please ask Matt before using the functions.
 #'
+#' @importFrom tidyr expand_grid complete
 #' @importFrom qs qsave qread
 #' @importFrom pbapply pblapply
 NULL
@@ -175,6 +176,7 @@ scrape_weather <- function(year, week, start_date, end_date, locations = NULL, p
   locations |>
     mutate(isComplete = .data$Status == "Complete") |>
     count(.data$isComplete) |>
+    complete(isComplete = c(FALSE,TRUE), fill=list(n=0L)) |>
     arrange(.data$isComplete) |>
     pull(.data$n) ->
     lnums
@@ -290,7 +292,7 @@ scrape_weather <- function(year, week, start_date, end_date, locations = NULL, p
     cat("Saving final archive file (this will take some time)...\n")
     qsave(all_wthr, file.path(path, outfile), preset="archive")
 
-    cat("Scraping completed on ", fmt_dttm, " - please send '", outfile, "' to Matt.\n", sep="", append=TRUE, file=file.path(path, name, "log.txt"))
+    cat("Scraping completed on ", fmt_dttm(), " - please send '", outfile, "' to Matt.\n", sep="", append=TRUE, file=file.path(path, name, "log.txt"))
     cat("Scraping completed - please send '", outfile, "' to Matt.\n", sep="")
     rv[["complete"]] <- TRUE
 
