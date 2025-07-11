@@ -54,6 +54,12 @@ scrape_burst_eu <- function(year, path = "~/weather_scrape"){
   scrape_weather(year=year, locations=locations, path=path, max_scrapes = 60L, interval = "15s", fail_interval = "abort", progress = "pb")
 }
 
+#' @rdname scrape_weather
+#' @export
+scrape_burst <- function(year, path = "~/weather_scrape"){
+  locations <- weatherscrape::weather_locations
+  scrape_weather(year=year, locations=locations, path=path, max_scrapes = 60L, interval = "15s", fail_interval = "abort", progress = "pb")
+}
 
 #' @rdname scrape_weather
 #' @export

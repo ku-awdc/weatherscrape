@@ -4,12 +4,15 @@
 \alias{scrape_weather}
 \alias{scrape_burst_dk}
 \alias{scrape_burst_eu}
+\alias{scrape_burst}
 \alias{scrape_continual}
 \title{Scrape weather data for multiple locations (USE ONLY ONCE PER DAY, AND NEVER FROM INSIDE KU OR WHILE CONNECTED TO THE KU VPN)}
 \usage{
 scrape_burst_dk(year, path = "~/weather_scrape")
 
 scrape_burst_eu(year, path = "~/weather_scrape")
+
+scrape_burst(year, path = "~/weather_scrape")
 
 scrape_continual(year, path = "~/weather_scrape")
 
