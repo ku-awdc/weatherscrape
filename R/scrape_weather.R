@@ -166,15 +166,15 @@ scrape_weather <- function(year, week, start_date, end_date, locations = NULL, p
   progress <- match.arg(progress)
   if(progress=="pb"){
     applyfun <- pblapply
-    progressfun <- function(x){ }
+    progressfun <- function(x, n, t){ }
   }else if(progress=="log"){
     applyfun <- lapply
-    progressfun <- function(x){
-      cat("\tScraping ", x[["ID"]], " at ", fmt_dttm(), "...\n", sep="")
+    progressfun <- function(x, n, t){
+      cat("\tScraping ", x[["ID"]], " (#", n, " of ", t, ") at ", fmt_dttm(), "...\n", sep="")
     }
   }else if(progress=="none"){
     applyfun <- lapply
-    progressfun <- function(x){ }
+    progressfun <- function(x, n, t){ }
   }else{
     stop("Unrecognised progress type")
   }
@@ -227,12 +227,13 @@ scrape_weather <- function(year, week, start_date, end_date, locations = NULL, p
 
     locations |>
       slice(indexes_using) |>
+      mutate(row_index = row_number()) |>
       rowwise() |>
       group_split() |>
       applyfun(\(x){
 
         if(!is.na(x[["Status"]])) Sys.sleep(interval_s)
-        progressfun(x)
+        progressfun(x, x[["row_index"]], length(indexes_using))
         ss <- try({
           wthr <- fetch_weather(latitude=x[["Latitude"]], longitude=x[["Longitude"]], elevation=x[["MeanElevation"]], start_date=start_date, end_date=end_date, format=TRUE)
         })
