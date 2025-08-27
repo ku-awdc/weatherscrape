@@ -25,6 +25,11 @@
 #' @importFrom lubridate as_date as_datetime
 #' @importFrom jsonlite fromJSON
 #'
+#' @examples
+#' \dontrun{
+#' fetch_weather(55.7, 12.5, start_date=as.Date("2020-01-01"), end_date=as.Date("2020-01-07"))
+#' }
+#'
 #' @export
 fetch_weather <- function(latitude, longitude, elevation=NA_real_, start_date, end_date, format=TRUE){
 
