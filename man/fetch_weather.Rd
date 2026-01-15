@@ -43,3 +43,9 @@ exceed 10 locations per minute and/or 80 per hour and/or 160 per day (for a
 full year at a time) - see https://open-meteo.com/en/terms.
 Modifying the time period has a linear effect on the number of API calls.
 }
+\examples{
+\dontrun{
+fetch_weather(55.7, 12.5, start_date=as.Date("2020-01-01"), end_date=as.Date("2020-01-07"))
+}
+
+}
