@@ -96,7 +96,12 @@ scrape_weather <- function(year, week, start_date, end_date, locations = NULL, p
   if(!missing(end_date)) stop("The 'end_date' argument is not currently usable")
 
   start_date <- as_date(str_c(year, "-01-01"))
-  end_date <- as_date(str_c(year, "-12-31"))
+  if(year==year(today())){
+    end_date <- floor_date(today(), unit="month")-1
+    warning("Truncating date range to ", as.character(end_date))
+  }else{
+    end_date <- as_date(str_c(year, "-12-31"))
+  }
 
   assert_date(start_date, any.missing=FALSE, len=1L, lower=as_date("1900-01-01"))
   assert_date(end_date, any.missing=FALSE, len=1L, lower=start_date, upper=(Sys.Date() - 7L))

@@ -22,7 +22,7 @@
 #'
 #' @importFrom checkmate matchArg qassert assert_number assert_date assert_numeric assert_vector
 #' @importFrom stringr str_c str_length str_sub
-#' @importFrom lubridate as_date as_datetime
+#' @importFrom lubridate as_date as_datetime floor_date year today
 #' @importFrom jsonlite fromJSON
 #'
 #' @examples
