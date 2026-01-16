@@ -103,6 +103,15 @@ scrape_weather <- function(year, week, start_date, end_date, locations = NULL, p
     end_date <- as_date(str_c(year, "-12-31"))
   }
 
+  ## TODO: REMOVE TEMPORARY HACK
+  if(year=="2025"){
+    ## Only scrape from 1st Nov to end of week 52 (28th Dec)
+    start_date <- as_date("2025-11-01")
+    end_date <- as_date("2025-12-28")
+    interval <- "150f"
+  }
+  ## \TEMPORARY HACK
+
   assert_date(start_date, any.missing=FALSE, len=1L, lower=as_date("1900-01-01"))
   assert_date(end_date, any.missing=FALSE, len=1L, lower=start_date, upper=(Sys.Date() - 7L))
 
