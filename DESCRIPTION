@@ -1,7 +1,7 @@
 Package: weatherscrape
 Title: What the Package Does (One Line, Title Case)
-Version: 0.2.5-7
-Date: 2025-07-29
+Version: 0.3.0-1
+Date: 2026-01-20
 Description: What the package does (one paragraph).
 Authors@R:
   c(
@@ -17,6 +17,7 @@ Imports:
   jsonlite,
   checkmate,
   qs,
+  qs2,
   tidyr,
   rlang,
   dplyr,

@@ -35,10 +35,24 @@
 #' to \code{\link{fetch_weather}} also count against this. If you are not sure
 #' what this means then please ask Matt before using the functions.
 #'
+#' @importFrom ISOweek date2ISOweek ISOweek2date
 #' @importFrom tidyr expand_grid complete
 #' @importFrom qs qsave qread
 #' @importFrom pbapply pblapply
 NULL
+
+#' @rdname scrape_weather
+#' @export
+scrape_weekly <- function(start_week = date2ISOweek(today() |> floor_date(unit="year") |> floor_date(unit="week", week_start=1)), path = "~/weather_scrape"){
+  locations <- weatherscrape::weather_locations
+
+  latest_week <- date2ISOweek(floor_date(today(), unit="week", week_start=1) - 14L)
+  stopifnot(ISOweek2date(start_week) <= ISOweek2date(latest_week))
+  all_dates <- seq(ISOweek2date(start_week), ISOweek2date(latest_week), by=7)
+
+  ISOweek2date(latest_week)
+  scrape_weather(year=year, locations=locations, path=path, max_scrapes = 60L, interval = "15s", fail_interval = "abort", progress = "pb")
+}
 
 #' @rdname scrape_weather
 #' @export
@@ -102,15 +116,6 @@ scrape_weather <- function(year, week, start_date, end_date, locations = NULL, p
   }else{
     end_date <- as_date(str_c(year, "-12-31"))
   }
-
-  ## TODO: REMOVE TEMPORARY HACK
-  if(year=="2025"){
-    ## Only scrape from 1st Nov to end of week 52 (28th Dec)
-    start_date <- as_date("2025-11-01")
-    end_date <- as_date("2025-12-28")
-    interval <- "150f"
-  }
-  ## \TEMPORARY HACK
 
   assert_date(start_date, any.missing=FALSE, len=1L, lower=as_date("1900-01-01"))
   assert_date(end_date, any.missing=FALSE, len=1L, lower=start_date, upper=(Sys.Date() - 7L))
