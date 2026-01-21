@@ -21,6 +21,7 @@ Imports:
   tidyr,
   rlang,
   dplyr,
+  purrr,
   tibble,
   forcats,
   lubridate,

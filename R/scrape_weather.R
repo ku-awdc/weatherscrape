@@ -37,26 +37,43 @@
 #'
 #' @importFrom ISOweek date2ISOweek ISOweek2date
 #' @importFrom tidyr expand_grid complete
-#' @importFrom qs qsave qread
+#' @importFrom qs2 qs_save qs_read
 #' @importFrom pbapply pblapply
+#' @importFrom purrr map
 NULL
 
 #' @rdname scrape_weather
 #' @export
-scrape_weekly <- function(start_week = date2ISOweek(today() |> floor_date(unit="year") |> floor_date(unit="week", week_start=1)), path = "~/weather_scrape"){
+scrape_weekly <- function(start_week = make_week.numeric(1), path = "~/weather_scrape"){
+
+  # make_week.numeric <- weatherscrape:::make_week.numeric; make_week.date <- weatherscrape:::make_week.date
+
+  latest_week <- make_week.date(today()-14L)
+  stopifnot(length(start_week$Date)==1L, start_week$Date<=latest_week$Date)
+  all_weeks <- seq(start_week$Date, latest_week$Date, by=7) |> make_week.date()
+
   locations <- weatherscrape::weather_locations
 
-  latest_week <- date2ISOweek(floor_date(today(), unit="week", week_start=1) - 14L)
-  stopifnot(ISOweek2date(start_week) <= ISOweek2date(latest_week))
-  all_dates <- seq(ISOweek2date(start_week), ISOweek2date(latest_week), by=7)
+  all_weeks |>
+    rowwise() |>
+    group_split() |>
+    map(\(x){
 
-  ISOweek2date(latest_week)
-  scrape_weather(year=year, locations=locations, path=path, max_scrapes = 60L, interval = "15s", fail_interval = "abort", progress = "pb")
+      yrpth <- file.path(path, str_c("y",x$Year))
+
+      ## Check if the end result file is there:
+      if(file.exists(file.path(yrpth, str_c(x$String, "_l1617.qs2")))) invisible(NULL)
+
+      scrape_weather(start_date=x$Date, end_date=x$Date+6L, name=x$String, locations=locations, path=yrpth, max_scrapes = NA_integer_, interval = "120f", fail_interval = "1h", progress = "log")
+
+    })
+
 }
 
 #' @rdname scrape_weather
 #' @export
 scrape_burst_dk <- function(year, path = "~/weather_scrape"){
+  stop("FIXME")
   locations <- weatherscrape::weather_locations |> filter(.data$GridScale=="10x10km")
   scrape_weather(year=year, locations=locations, path=path, max_scrapes = 60L, interval = "15s", fail_interval = "abort", progress = "pb")
 }
@@ -64,6 +81,7 @@ scrape_burst_dk <- function(year, path = "~/weather_scrape"){
 #' @rdname scrape_weather
 #' @export
 scrape_burst_eu <- function(year, path = "~/weather_scrape"){
+  stop("FIXME")
   locations <- weatherscrape::weather_locations |> filter(.data$GridScale=="100x100km")
   scrape_weather(year=year, locations=locations, path=path, max_scrapes = 60L, interval = "15s", fail_interval = "abort", progress = "pb")
 }
@@ -71,6 +89,7 @@ scrape_burst_eu <- function(year, path = "~/weather_scrape"){
 #' @rdname scrape_weather
 #' @export
 scrape_burst <- function(year, path = "~/weather_scrape"){
+  stop("FIXME")
   locations <- weatherscrape::weather_locations
   scrape_weather(year=year, locations=locations, path=path, max_scrapes = 60L, interval = "15s", fail_interval = "abort", progress = "pb")
 }
@@ -78,13 +97,14 @@ scrape_burst <- function(year, path = "~/weather_scrape"){
 #' @rdname scrape_weather
 #' @export
 scrape_continual <- function(year, path = "~/weather_scrape"){
+  stop("FIXME")
   scrape_weather(year=year, path=path, max_scrapes = NA_integer_, interval = "15m", fail_interval = "1h", progress = "log")
 }
 
 
 #' @rdname scrape_weather
 #' @export
-scrape_weather <- function(year, week, start_date, end_date, locations = NULL, path = "~/weather_scrape", max_scrapes = 60L, interval = "15s", fail_interval = "abort", progress = c("pb", "log", "none")){
+scrape_weather <- function(start_date, end_date, name, locations = NULL, path = "~/weather_scrape", max_scrapes = 60L, interval = "15s", fail_interval = "abort", progress = c("pb", "log", "none")){
 
   cat("\n----------------------------------------------------------------------\n")
   cat("IMPORTANT NOTE:
@@ -103,18 +123,21 @@ scrape_weather <- function(year, week, start_date, end_date, locations = NULL, p
   # - Change last burst date to date/time to account for time zones
   # - Modify fail_interval_s so it accounts for interval_s (as it is added)
 
-  name <- str_c("y", year)
+  if(FALSE){
+    ## TODO: re-enable checks
+    name <- str_c("y", year)
 
-  if(!missing(week)) stop("The 'week' argument is not currently usable")
-  if(!missing(start_date)) stop("The 'start_date' argument is not currently usable")
-  if(!missing(end_date)) stop("The 'end_date' argument is not currently usable")
+    if(!missing(week)) stop("The 'week' argument is not currently usable")
+    if(!missing(start_date)) stop("The 'start_date' argument is not currently usable")
+    if(!missing(end_date)) stop("The 'end_date' argument is not currently usable")
 
-  start_date <- as_date(str_c(year, "-01-01"))
-  if(year==year(today())){
-    end_date <- floor_date(today(), unit="month")-1
-    warning("Truncating date range to ", as.character(end_date))
-  }else{
-    end_date <- as_date(str_c(year, "-12-31"))
+    start_date <- as_date(str_c(year, "-01-01"))
+    if(year==year(today())){
+      end_date <- floor_date(today(), unit="month")-1
+      warning("Truncating date range to ", as.character(end_date))
+    }else{
+      end_date <- as_date(str_c(year, "-12-31"))
+    }
   }
 
   assert_date(start_date, any.missing=FALSE, len=1L, lower=as_date("1900-01-01"))
@@ -149,7 +172,7 @@ scrape_weather <- function(year, week, start_date, end_date, locations = NULL, p
   # Function to check if all files are present
   files_present <- function(x){
     present <- list.files(file.path(path, name))
-    expected <- str_c(x, ".rqs")
+    expected <- str_c(x, ".qs2")
     expected %in% present
   }
   fctl <- c("Pending","Failed","Complete")
@@ -167,12 +190,12 @@ scrape_weather <- function(year, week, start_date, end_date, locations = NULL, p
   if(is.na(max_scrapes)) max_scrapes <- Inf
   if(units!="f" && interval_s < 15*60){
     if(max_scrapes > 60L) stop("A minimum interval of 15m is required for max_scrapes > 60")
-    cf <- file.path(path, "last_burst_date.rqs")
+    cf <- file.path(path, "last_burst_date.qs2")
     if(file.exists(cf)){
-      dt <- qread(cf)
+      dt <- qs_read(cf)
       if(dt == Sys.Date()) stop("You have already run a short-interval scrape today;\nplease wait until tomorrow to run again!")
     }
-    qsave(Sys.Date(), cf)
+    qs_save(Sys.Date(), cf)
   }
 
   qassert(fail_interval, "S1")
@@ -264,7 +287,7 @@ scrape_weather <- function(year, week, start_date, end_date, locations = NULL, p
         }
 
         wthr <- wthr |> mutate(ID = x[["ID"]]) |> select(.data$ID, everything())
-        qsave(wthr, file.path(path, name, str_c(x[["ID"]], ".rqs")), preset="archive")
+        qs_save(wthr, file.path(path, name, str_c(x[["ID"]], ".qs2")), compress_level=10L)
 
         return(x |> mutate(Status = fct("Complete", levels=fctl)))
 
@@ -288,7 +311,7 @@ scrape_weather <- function(year, week, start_date, end_date, locations = NULL, p
     pass <- pass + 1L
   }
 
-  outfile <- str_c(name, "_l", nrow(locations), ".rqs")
+  outfile <- str_c(name, "_l", nrow(locations), ".qs2")
   rv <- list(folder = file.path(path, name), file = file.path(path, outfile), complete=FALSE, status = locations)
 
   # If all complete, save with archive, but re-check each output
@@ -296,10 +319,10 @@ scrape_weather <- function(year, week, start_date, end_date, locations = NULL, p
     cat("Scraping complete: beginning final pass to load and re-save...\n")
 
     applyfun(locations[["ID"]], function(x){
-      #format_weather(qread(file.path(path, name, str_c(x, ".rqs")))) |>
+      #format_weather(qs_read(file.path(path, name, str_c(x, ".qs2")))) |>
       #  mutate(ID = x) |>
       #  select(ID, everything())
-      qread(file.path(path, name, str_c(x, ".rqs")))
+      qs_read(file.path(path, name, str_c(x, ".qs2")))
     }) |>
       bind_rows() ->
       all_wthr
@@ -316,7 +339,7 @@ scrape_weather <- function(year, week, start_date, end_date, locations = NULL, p
 
     stopifnot(!file.exists(file.path(path, outfile)))
     cat("Saving final archive file (this will take some time)...\n")
-    qsave(all_wthr, file.path(path, outfile), preset="archive")
+    qs_save(all_wthr, file.path(path, outfile), compress_level=10L)
 
     cat("Scraping completed on ", fmt_dttm(), " - please send '", outfile, "' to Matt.\n", sep="", append=TRUE, file=file.path(path, name, "log.txt"))
     cat("Scraping completed - please send '", outfile, "' to Matt.\n", sep="")
