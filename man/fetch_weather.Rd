@@ -41,7 +41,9 @@ THE \code{\link{scrape_weather}} functions
 Fetching data for a 12-month period counts as ~60 (2024=57.4) API calls, so you must not
 exceed 10 locations per minute and/or 80 per hour and/or 160 per day (for a
 full year at a time) - see https://open-meteo.com/en/terms.
-Modifying the time period has a linear effect on the number of API calls.
+Modifying the time period has a linear effect on the number of API calls:
+fetching data for 1 week is a little under 4 API calls i.e. max 2500 per day,
+(& 1250 per hour & 150 per minute) so a minimum 30 second delay between scrapes
 }
 \examples{
 \dontrun{

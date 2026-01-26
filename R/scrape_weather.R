@@ -62,9 +62,10 @@ scrape_weekly <- function(start_week = make_week.numeric(1), path = "~/weather_s
       yrpth <- file.path(path, str_c("y",x$Year))
 
       ## Check if the end result file is there:
-      if(file.exists(file.path(yrpth, str_c(x$String, "_l1617.qs2")))) invisible(NULL)
-
-      scrape_weather(start_date=x$Date, end_date=x$Date+6L, name=x$String, locations=locations, path=yrpth, max_scrapes = NA_integer_, interval = "120f", fail_interval = "1h", progress = "log")
+      if(!file.exists(file.path(yrpth, str_c(x$String, "_l1617.qs2")))){
+        cat("Scraping week ", x$Week, "...\n", sep="")
+        scrape_weather(start_date=x$Date, end_date=x$Date+6L, name=x$String, locations=locations, path=yrpth, max_scrapes = NA_integer_, interval = "60f", fail_interval = "1h", progress = "log")
+      }
 
     })
 
@@ -145,12 +146,12 @@ scrape_weather <- function(start_date, end_date, name, locations = NULL, path = 
 
   qassert(path, str_c("S1"))
   if(!dir.exists(path)) dir.create(path)
-  if(!dir.exists(file.path(path, name))){
-    if(name==str_c("y", year) && dir.exists(file.path(path, year))){
-      ss <- file.rename(file.path(path, year), file.path(path, name))
-      if(!ss) stop("Error renaming directory - please report to Matt")
-    }
-  }
+  #if(!dir.exists(file.path(path, name))){
+  #  if(name==str_c("y", year) && dir.exists(file.path(path, year))){
+  #    ss <- file.rename(file.path(path, year), file.path(path, name))
+  #    if(!ss) stop("Error renaming directory - please report to Matt")
+  #  }
+  #}
   if(!dir.exists(file.path(path, name))) dir.create(file.path(path, name))
 
   if(is.null(locations)){
