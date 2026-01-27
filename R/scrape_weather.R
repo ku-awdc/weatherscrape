@@ -64,7 +64,7 @@ scrape_weekly <- function(start_week = make_week.numeric(1), path = "~/weather_s
       ## Check if the end result file is there:
       if(!file.exists(file.path(yrpth, str_c(x$String, "_l1617.qs2")))){
         cat("Scraping week ", x$Week, "...\n", sep="")
-        scrape_weather(start_date=x$Date, end_date=x$Date+6L, name=x$String, locations=locations, path=yrpth, max_scrapes = NA_integer_, interval = "60f", fail_interval = "1h", progress = "log")
+        scrape_weather(start_date=x$Date, end_date=x$Date+6L, name=x$String, locations=locations, path=yrpth, max_scrapes = NA_integer_, interval = "150f", fail_interval = "1h", progress = "log")
       }
 
     })
