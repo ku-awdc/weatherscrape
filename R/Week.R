@@ -1,6 +1,5 @@
 ## TODO:  S7 class
 
-#' @importFrom lubridate as_date today year wday isoyear isoweek
 #' @importFrom stringr str_c str_replace_all
 #' @importFrom tibble tibble
 #' @importFrom dplyr mutate

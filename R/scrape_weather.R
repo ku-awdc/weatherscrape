@@ -44,7 +44,7 @@ NULL
 
 #' @rdname scrape_weather
 #' @export
-scrape_weekly <- function(start_week = make_week.numeric(1), path = "~/weather_scrape"){
+scrape_weekly <- function(start_week = make_week.numeric(1), infinite_loop = TRUE, path = "~/weather_scrape"){
 
   # make_week.numeric <- weatherscrape:::make_week.numeric; make_week.date <- weatherscrape:::make_week.date
 
@@ -54,21 +54,31 @@ scrape_weekly <- function(start_week = make_week.numeric(1), path = "~/weather_s
 
   locations <- weatherscrape::weather_locations
 
-  all_weeks |>
-    rowwise() |>
-    group_split() |>
-    map(\(x){
+  repeat{
+    all_weeks |>
+      rowwise() |>
+      group_split() |>
+      map(\(x){
 
-      yrpth <- file.path(path, str_c("y",x$Year))
+        yrpth <- file.path(path, str_c("y",x$Year))
 
-      ## Check if the end result file is there:
-      if(!file.exists(file.path(yrpth, str_c(x$String, "_l1617.qs2")))){
-        cat("Scraping week ", x$Week, "...\n", sep="")
-        scrape_weather(start_date=x$Date, end_date=x$Date+6L, name=x$String, locations=locations, path=yrpth, max_scrapes = NA_integer_, interval = "150f", fail_interval = "1h", progress = "log")
-      }
+        ## Check if the end result file is there:
+        if(!file.exists(file.path(yrpth, str_c(x$String, "_l1617.qs2")))){
+          cat("Scraping week ", x$Week, "...\n", sep="")
+          scrape_weather(start_date=x$Date, end_date=x$Date+6L, name=x$String, locations=locations, path=yrpth, max_scrapes = NA_integer_, interval = "150f", fail_interval = "1h", progress = "log")
+        }
 
-    })
+      }) ->
+      rv
 
+    if(!infinite_loop) break
+
+    nextmon <- as.POSIXct(ceiling_date(today(), unit="week", week_start = 1)) + hours(4)
+    cat("\n\nPausing until", as.character(nextmon), "\n\n")
+    as.numeric(nextmon - now(), units="secs") |> ceiling() |> Sys.sleep()
+  }
+
+  invisible(rv)
 }
 
 #' @rdname scrape_weather

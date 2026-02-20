@@ -9,7 +9,11 @@
 \alias{scrape_continual}
 \title{Scrape weather data for multiple locations (USE ONLY ONCE PER DAY, AND NEVER FROM INSIDE KU OR WHILE CONNECTED TO THE KU VPN)}
 \usage{
-scrape_weekly(start_week = make_week.numeric(1), path = "~/weather_scrape")
+scrape_weekly(
+  start_week = make_week.numeric(1),
+  infinite_loop = TRUE,
+  path = "~/weather_scrape"
+)
 
 scrape_burst_dk(year, path = "~/weather_scrape")
 
