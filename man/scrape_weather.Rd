@@ -2,59 +2,41 @@
 % Please edit documentation in R/scrape_weather.R
 \name{scrape_weather}
 \alias{scrape_weather}
-\alias{scrape_weekly}
-\alias{scrape_burst_dk}
-\alias{scrape_burst_eu}
-\alias{scrape_burst}
-\alias{scrape_continual}
 \title{Scrape weather data for multiple locations (USE ONLY ONCE PER DAY, AND NEVER FROM INSIDE KU OR WHILE CONNECTED TO THE KU VPN)}
 \usage{
-scrape_weekly(
-  start_week = make_week.numeric(1),
-  infinite_loop = TRUE,
-  path = "~/weather_scrape"
-)
-
-scrape_burst_dk(year, path = "~/weather_scrape")
-
-scrape_burst_eu(year, path = "~/weather_scrape")
-
-scrape_burst(year, path = "~/weather_scrape")
-
-scrape_continual(year, path = "~/weather_scrape")
-
 scrape_weather(
   start_date,
   end_date,
-  name,
   locations = NULL,
+  name = NULL,
   path = "~/weather_scrape",
   max_scrapes = 60L,
   interval = "15s",
   fail_interval = "abort",
-  progress = c("pb", "log", "none")
+  progress = c("pb", "log", "none"),
+  ...
 )
 }
 \arguments{
-\item{path}{a path to a folder to save results}
+\item{start_date}{start date for the relevant period (inclusive)}
 
-\item{year}{a single year providing a date range from 1st January to 31st December (inclusive), unless week is also specified (see below)}
-
-\item{start_date}{start date for the relevant period (inclusive; NOT CURRENTLY USED)}
-
-\item{end_date}{end date for the relevant period (inclusive; NOT CURRENTLY USED)}
+\item{end_date}{end date for the relevant period (inclusive)}
 
 \item{locations}{a data frame of locations to scrape (optional - otherwise \code{\link{weather_locations}} is used)}
+
+\item{name}{a name to use for the final qs2 file (and temporary save directory) - if blank then the date range is used}
+
+\item{path}{a path to a folder to save results}
 
 \item{max_scrapes}{the maximum number of scrapes to run}
 
 \item{interval}{the interval between scrapes (should end in s, m or h)}
 
-\item{fail_interval}{a pause interval following an unsuccessful scrape (should end in s, m or h)}
+\item{fail_interval}{a pause interval following an unsuccessful scrape (should end in s, m or h) - or "abort" to immediately stop}
 
 \item{progress}{the type of progress update to show - either "pb", "log" or "none"}
 
-\item{week}{a single or range of weeks (ISO 8601, i.e. \%V) to fetch - note that week 1 and/or 52/53 may contain dates outside the year (NOT CURRENTLY USED)}
+\item{...}{arguments controlling compression etc passed to \code{\link[qs2]{qs_save}}}
 }
 \value{
 a data frame showing the scraping status of each location, invisibly

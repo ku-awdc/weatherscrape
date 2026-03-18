@@ -1,16 +1,16 @@
 #' Scrape weather data for multiple locations (USE ONLY ONCE PER DAY, AND NEVER FROM INSIDE KU OR WHILE CONNECTED TO THE KU VPN)
 #' @name scrape_weather
 #'
-#' @param year a single year providing a date range from 1st January to 31st December (inclusive), unless week is also specified (see below)
-#' @param week a single or range of weeks (ISO 8601, i.e. %V) to fetch - note that week 1 and/or 52/53 may contain dates outside the year (NOT CURRENTLY USED)
-#' @param start_date start date for the relevant period (inclusive; NOT CURRENTLY USED)
-#' @param end_date end date for the relevant period (inclusive; NOT CURRENTLY USED)
+#' @param start_date start date for the relevant period (inclusive)
+#' @param end_date end date for the relevant period (inclusive)
 #' @param locations a data frame of locations to scrape (optional - otherwise \code{\link{weather_locations}} is used)
+#' @param name a name to use for the final qs2 file (and temporary save directory) - if blank then the date range is used
 #' @param path a path to a folder to save results
 #' @param max_scrapes the maximum number of scrapes to run
 #' @param interval the interval between scrapes (should end in s, m or h)
-#' @param fail_interval a pause interval following an unsuccessful scrape (should end in s, m or h)
+#' @param fail_interval a pause interval following an unsuccessful scrape (should end in s, m or h) - or "abort" to immediately stop
 #' @param progress the type of progress update to show - either "pb", "log" or "none"
+#' @param ... arguments controlling compression etc passed to \code{\link[qs2]{qs_save}}
 #'
 #' @returns a data frame showing the scraping status of each location, invisibly
 #'
@@ -35,26 +35,41 @@
 #' to \code{\link{fetch_weather}} also count against this. If you are not sure
 #' what this means then please ask Matt before using the functions.
 #'
-#' @importFrom ISOweek date2ISOweek ISOweek2date
 #' @importFrom tidyr expand_grid complete
 #' @importFrom qs2 qs_save qs_read
 #' @importFrom pbapply pblapply
 #' @importFrom purrr map
 NULL
 
-#' @rdname scrape_weather
-#' @export
-scrape_weekly <- function(start_week = make_week.numeric(1), infinite_loop = TRUE, path = "~/weather_scrape"){
+# ' @rdname scrape_weather
+# ' @export
+scrape_weekly <- function(start_week = make_week.numeric(1), end_week = NULL, locations = NULL, path = "~/weather_scrape"){
 
   # make_week.numeric <- weatherscrape:::make_week.numeric; make_week.date <- weatherscrape:::make_week.date
 
-  latest_week <- make_week.date(today()-14L)
-  stopifnot(length(start_week$Date)==1L, start_week$Date<=latest_week$Date)
-  all_weeks <- seq(start_week$Date, latest_week$Date, by=7) |> make_week.date()
+  if(is.null(locations)){
+    locations <- weatherscrape::weather_locations
+  }
 
-  locations <- weatherscrape::weather_locations
+  ## TODO: argument checks
+
+  if(is.null(end_week)){
+    infinite_loop <- TRUE
+    stopifnot(length(start_week$Date)==1L)
+  }else{
+    infinite_loop <- FALSE
+    latest_week <- make_week.date(today()-14L)
+    stopifnot(
+      length(start_week$Date)==1L,
+      start_week$Date<=end_week$Date,
+      end_week$Date<=latest_week$Date,
+    )
+  }
 
   repeat{
+    latest_week <- make_week.date(today()-14L)
+    all_weeks <- seq(start_week$Date, latest_week$Date, by=7) |> make_week.date()
+
     all_weeks |>
       rowwise() |>
       group_split() |>
@@ -65,7 +80,7 @@ scrape_weekly <- function(start_week = make_week.numeric(1), infinite_loop = TRU
         ## Check if the end result file is there:
         if(!file.exists(file.path(yrpth, str_c(x$String, "_l1617.qs2")))){
           cat("Scraping week ", x$Week, "...\n", sep="")
-          scrape_weather(start_date=x$Date, end_date=x$Date+6L, name=x$String, locations=locations, path=yrpth, max_scrapes = NA_integer_, interval = "150f", fail_interval = "1h", progress = "log")
+          scrape_weather(start_date=x$Date, end_date=x$Date+6L, locations=locations, name=x$String, path=yrpth, max_scrapes = NA_integer_, interval = "150f", fail_interval = "1h", progress = "log")
         }
 
       }) ->
@@ -81,41 +96,41 @@ scrape_weekly <- function(start_week = make_week.numeric(1), infinite_loop = TRU
   invisible(rv)
 }
 
-#' @rdname scrape_weather
-#' @export
-scrape_burst_dk <- function(year, path = "~/weather_scrape"){
-  stop("FIXME")
-  locations <- weatherscrape::weather_locations |> filter(.data$GridScale=="10x10km")
-  scrape_weather(year=year, locations=locations, path=path, max_scrapes = 60L, interval = "15s", fail_interval = "abort", progress = "pb")
-}
+# ' @rdname scrape_weather
+# ' @export
+# scrape_burst_dk <- function(year, path = "~/weather_scrape"){
+#   stop("FIXME")
+#   locations <- weatherscrape::weather_locations |> filter(.data$GridScale=="10x10km")
+#   scrape_weather(year=year, locations=locations, path=path, max_scrapes = 60L, interval = "15s", fail_interval = "abort", progress = "pb")
+# }
+
+# ' @rdname scrape_weather
+# ' @export
+# scrape_burst_eu <- function(year, path = "~/weather_scrape"){
+#   stop("FIXME")
+#   locations <- weatherscrape::weather_locations |> filter(.data$GridScale=="100x100km")
+#   scrape_weather(year=year, locations=locations, path=path, max_scrapes = 60L, interval = "15s", fail_interval = "abort", progress = "pb")
+# }
+
+# ' @rdname scrape_weather
+# ' @export
+# scrape_burst <- function(year, path = "~/weather_scrape"){
+#   stop("FIXME")
+#   locations <- weatherscrape::weather_locations
+#   scrape_weather(year=year, locations=locations, path=path, max_scrapes = 60L, interval = "15s", fail_interval = "abort", progress = "pb")
+# }
+#
+# ' @rdname scrape_weather
+# ' @export
+# scrape_continual <- function(year, path = "~/weather_scrape"){
+#   stop("FIXME")
+#   scrape_weather(year=year, path=path, max_scrapes = NA_integer_, interval = "15m", fail_interval = "1h", progress = "log")
+# }
+
 
 #' @rdname scrape_weather
 #' @export
-scrape_burst_eu <- function(year, path = "~/weather_scrape"){
-  stop("FIXME")
-  locations <- weatherscrape::weather_locations |> filter(.data$GridScale=="100x100km")
-  scrape_weather(year=year, locations=locations, path=path, max_scrapes = 60L, interval = "15s", fail_interval = "abort", progress = "pb")
-}
-
-#' @rdname scrape_weather
-#' @export
-scrape_burst <- function(year, path = "~/weather_scrape"){
-  stop("FIXME")
-  locations <- weatherscrape::weather_locations
-  scrape_weather(year=year, locations=locations, path=path, max_scrapes = 60L, interval = "15s", fail_interval = "abort", progress = "pb")
-}
-
-#' @rdname scrape_weather
-#' @export
-scrape_continual <- function(year, path = "~/weather_scrape"){
-  stop("FIXME")
-  scrape_weather(year=year, path=path, max_scrapes = NA_integer_, interval = "15m", fail_interval = "1h", progress = "log")
-}
-
-
-#' @rdname scrape_weather
-#' @export
-scrape_weather <- function(start_date, end_date, name, locations = NULL, path = "~/weather_scrape", max_scrapes = 60L, interval = "15s", fail_interval = "abort", progress = c("pb", "log", "none")){
+scrape_weather <- function(start_date, end_date, locations = NULL, name = NULL, path = "~/weather_scrape", max_scrapes = 60L, interval = "15s", fail_interval = "abort", progress = c("pb", "log", "none"), ...){
 
   cat("\n----------------------------------------------------------------------\n")
   cat("IMPORTANT NOTE:
@@ -125,43 +140,16 @@ scrape_weather <- function(start_date, end_date, name, locations = NULL, path = 
     \tIf either of these apply then abort this function call now!!!\n")
   cat("----------------------------------------------------------------------\n\n")
 
-  # TODO:
-  # - Distinguish error saving from error scraping
-  # - Stop after e.g. 5 failed scrapes
-  # - Combine first 4 arguments to get the date range (valid options are either just year, just year and week, or just start_date and end_date)
-  # - Pick name as: yXXXX, yXXXX_wXX, yXXXX_wrXX-XX, or drXXXXXXXX-XXXXXXXX depending on first 4 arguments
-  # - Change minimum interval for burst/continuous according to length of date range (i.e. API tokens per call)
-  # - Change last burst date to date/time to account for time zones
-  # - Modify fail_interval_s so it accounts for interval_s (as it is added)
-
-  if(FALSE){
-    ## TODO: re-enable checks
-    name <- str_c("y", year)
-
-    if(!missing(week)) stop("The 'week' argument is not currently usable")
-    if(!missing(start_date)) stop("The 'start_date' argument is not currently usable")
-    if(!missing(end_date)) stop("The 'end_date' argument is not currently usable")
-
-    start_date <- as_date(str_c(year, "-01-01"))
-    if(year==year(today())){
-      end_date <- floor_date(today(), unit="month")-1
-      warning("Truncating date range to ", as.character(end_date))
-    }else{
-      end_date <- as_date(str_c(year, "-12-31"))
-    }
-  }
-
   assert_date(start_date, any.missing=FALSE, len=1L, lower=as_date("1900-01-01"))
   assert_date(end_date, any.missing=FALSE, len=1L, lower=start_date, upper=(Sys.Date() - 7L))
 
-  qassert(path, str_c("S1"))
+  if(is.null(name)){
+    name <- str_c("weather_l", nrow(locations), "_", strftime(start_date, "%Y%m%d"), "_", strftime(end_date, "%Y%m%d"))
+  }
+  qassert(name, "S1")
+
+  qassert(path, "S1")
   if(!dir.exists(path)) dir.create(path)
-  #if(!dir.exists(file.path(path, name))){
-  #  if(name==str_c("y", year) && dir.exists(file.path(path, year))){
-  #    ss <- file.rename(file.path(path, year), file.path(path, name))
-  #    if(!ss) stop("Error renaming directory - please report to Matt")
-  #  }
-  #}
   if(!dir.exists(file.path(path, name))) dir.create(file.path(path, name))
 
   if(is.null(locations)){
@@ -298,7 +286,7 @@ scrape_weather <- function(start_date, end_date, name, locations = NULL, path = 
         }
 
         wthr <- wthr |> mutate(ID = x[["ID"]]) |> select(.data$ID, everything())
-        qs_save(wthr, file.path(path, name, str_c(x[["ID"]], ".qs2")), compress_level=10L)
+        qs_save(wthr, file.path(path, name, str_c(x[["ID"]], ".qs2")))
 
         return(x |> mutate(Status = fct("Complete", levels=fctl)))
 
@@ -349,11 +337,11 @@ scrape_weather <- function(start_date, end_date, name, locations = NULL, path = 
       )
 
     stopifnot(!file.exists(file.path(path, outfile)))
-    cat("Saving final archive file (this will take some time)...\n")
-    qs_save(all_wthr, file.path(path, outfile), compress_level=10L)
+    cat("Saving final archive file (this may take some time)...\n")
+    qs_save(all_wthr, file.path(path, outfile), ...)
 
-    cat("Scraping completed on ", fmt_dttm(), " - please send '", outfile, "' to Matt.\n", sep="", append=TRUE, file=file.path(path, name, "log.txt"))
-    cat("Scraping completed - please send '", outfile, "' to Matt.\n", sep="")
+    cat("Scraping completed on ", fmt_dttm(), ".\n", sep="", append=TRUE, file=file.path(path, name, "log.txt"))
+    cat("Scraping completed.\n", sep="")
     rv[["complete"]] <- TRUE
 
   }else{
