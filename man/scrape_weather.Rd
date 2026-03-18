@@ -11,6 +11,8 @@
 \usage{
 scrape_weekly(
   start_week = make_week.numeric(1),
+  year = year(today()),
+  locations = NULL,
   infinite_loop = TRUE,
   path = "~/weather_scrape"
 )
@@ -36,15 +38,15 @@ scrape_weather(
 )
 }
 \arguments{
-\item{path}{a path to a folder to save results}
-
 \item{year}{a single year providing a date range from 1st January to 31st December (inclusive), unless week is also specified (see below)}
+
+\item{locations}{a data frame of locations to scrape (optional - otherwise \code{\link{weather_locations}} is used)}
+
+\item{path}{a path to a folder to save results}
 
 \item{start_date}{start date for the relevant period (inclusive; NOT CURRENTLY USED)}
 
 \item{end_date}{end date for the relevant period (inclusive; NOT CURRENTLY USED)}
-
-\item{locations}{a data frame of locations to scrape (optional - otherwise \code{\link{weather_locations}} is used)}
 
 \item{max_scrapes}{the maximum number of scrapes to run}
 

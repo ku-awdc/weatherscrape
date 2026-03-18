@@ -44,17 +44,33 @@ NULL
 
 #' @rdname scrape_weather
 #' @export
-scrape_weekly <- function(start_week = make_week.numeric(1), infinite_loop = TRUE, path = "~/weather_scrape"){
+scrape_weekly <- function(start_week = make_week.numeric(1), end_week = NULL, locations = NULL, path = "~/weather_scrape"){
 
   # make_week.numeric <- weatherscrape:::make_week.numeric; make_week.date <- weatherscrape:::make_week.date
 
-  latest_week <- make_week.date(today()-14L)
-  stopifnot(length(start_week$Date)==1L, start_week$Date<=latest_week$Date)
-  all_weeks <- seq(start_week$Date, latest_week$Date, by=7) |> make_week.date()
+  if(is.null(locations)){
+    locations <- weatherscrape::weather_locations
+  }
 
-  locations <- weatherscrape::weather_locations
+  ## TODO: argument checks
+
+  if(is.null(end_week)){
+    infinite_loop <- TRUE
+    stopifnot(length(start_week$Date)==1L)
+  }else{
+    infinite_loop <- FALSE
+    latest_week <- make_week.date(today()-14L)
+    stopifnot(
+      length(start_week$Date)==1L,
+      start_week$Date<=end_week$Date,
+      end_week$Date<=latest_week$Date,
+    )
+  }
 
   repeat{
+    latest_week <- make_week.date(today()-14L)
+    all_weeks <- seq(start_week$Date, latest_week$Date, by=7) |> make_week.date()
+
     all_weeks |>
       rowwise() |>
       group_split() |>
