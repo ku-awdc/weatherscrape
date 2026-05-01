@@ -16,3 +16,5 @@ R/README.md
 tests/README.md
 vignettes/README.md
 
+^\.positai$
+^\.claude$

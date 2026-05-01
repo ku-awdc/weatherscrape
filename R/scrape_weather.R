@@ -66,9 +66,19 @@ scrape_weekly <- function(start_week = make_week.numeric(1), end_week = NULL, lo
     )
   }
 
+  rv <- list()
+
   repeat{
+
     latest_week <- make_week.date(today()-14L)
     all_weeks <- seq(start_week$Date, latest_week$Date, by=7) |> make_week.date()
+
+    if(nrow(all_weeks)==0L && infinite_loop){
+      nextmon <- as.POSIXct(ceiling_date(today(), unit="week", week_start = 1)) + hours(4)
+      cat("\n\nPausing until", as.character(nextmon), "\n\n")
+      as.numeric(nextmon - now(), units="secs") |> ceiling() |> Sys.sleep()
+      next
+    }
 
     all_weeks |>
       rowwise() |>
@@ -84,13 +94,11 @@ scrape_weekly <- function(start_week = make_week.numeric(1), end_week = NULL, lo
         }
 
       }) ->
-      rv
+      tt
+
+    rv <- c(rv, list(tt))
 
     if(!infinite_loop) break
-
-    nextmon <- as.POSIXct(ceiling_date(today(), unit="week", week_start = 1)) + hours(4)
-    cat("\n\nPausing until", as.character(nextmon), "\n\n")
-    as.numeric(nextmon - now(), units="secs") |> ceiling() |> Sys.sleep()
   }
 
   invisible(rv)
